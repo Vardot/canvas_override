@@ -6,13 +6,13 @@ namespace Drupal\canvas_override\Storage;
 
 use Drupal\canvas\Entity\ContentTemplate;
 use Drupal\canvas\Entity\ComponentTreeEntityInterface;
+use Drupal\canvas\Plugin\Field\FieldType\ComponentTreeItem;
 use Drupal\canvas\Plugin\Field\FieldType\ComponentTreeItemList;
 use Drupal\canvas\Storage\ComponentTreeLoader;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\canvas\Plugin\Field\FieldType\ComponentTreeItem;
 use Drupal\node\NodeInterface;
 
 /**
@@ -53,22 +53,21 @@ class CanvasOverrideComponentTreeLoader extends ComponentTreeLoader {
     $item = $entity->get($field_name);
     \assert($item instanceof ComponentTreeItemList);
 
-    // Seed from ContentTemplate only when:
-    // - the per-entity field is truly empty (never customised), AND
-    // - this is a node with canvas_override enabled.
+    // Seed from ContentTemplate only when the per-entity field is truly empty.
+    // Copy the template component values into $item (the node's own field list)
+    // rather than returning a dangling ComponentTreeItemList from
+    // ContentTemplate::getComponentTree(). Returning a dangling list causes a
+    // 500 error: content_moderation's entityFieldAccess hook calls getEntity()
+    // on the list, gets a config-entity adapter whose getEntityTypeId() returns
+    // "" and EntityTypeManager throws "The "" entity type does not exist."
     if ($item->isEmpty() && $entity instanceof NodeInterface) {
       $template = ContentTemplate::loadForEntity($entity, 'full');
       if ($template) {
         $template_tree = $template->getComponentTree($entity);
         if (!$template_tree->isEmpty()) {
-          // Save template components directly to the field so they persist
-          // through publish. A new revision is NOT created — we just populate
-          // the layout field as the starting point.
-          $entity->set($field_name, $template_tree->getValue());
-          $entity->setNewRevision(FALSE);
-          $entity->save();
-          // Return the freshly populated field.
-          return $entity->get($field_name);
+          // setValue() with the raw component array seeds the node's own list
+          // in-memory without saving — the editor persists it on user save.
+          $item->setValue($template_tree->getValue());
         }
       }
     }

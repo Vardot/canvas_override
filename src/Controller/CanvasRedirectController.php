@@ -38,18 +38,4 @@ final class CanvasRedirectController extends ControllerBase {
     return new TrustedRedirectResponse($url);
   }
 
-  /**
-   * Redirects to the ContentTemplate editor for this node's content type.
-   *
-   * Edits the shared default layout used by all nodes of this content type
-   * that do not have a per-node canvas override.
-   */
-  public function redirectToTemplate(NodeInterface $node): TrustedRedirectResponse {
-    $this->checkEnabled($node);
-
-    $bundle = $node->bundle();
-    $url = Url::fromUri("base:canvas/template/node/{$bundle}/full/{$node->id()}")->setAbsolute()->toString();
-    return new TrustedRedirectResponse($url);
-  }
-
 }
