@@ -17,6 +17,6 @@
     },
     "require": {
         "drupal/core": "~11.3.0",
-        "drupal/canvas": "^1.2"
+        "drupal/canvas": "~1"
     }
 }
