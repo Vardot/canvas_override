@@ -1,0 +1,39 @@
+canvas_override.node.canvas:
+  path: '/node/{node}/canvas'
+  defaults:
+    _controller: '\Drupal\canvas_override\Controller\CanvasRedirectController::redirectToEditor'
+    _title: 'Canvas Override'
+  requirements:
+    _canvas_override_access: 'TRUE'
+    node: '\d+'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _node_operation_route: TRUE
+
+canvas_override.node.canvas.default:
+  path: '/node/{node}/canvas/default'
+  defaults:
+    _controller: '\Drupal\canvas_override\Controller\CanvasRedirectController::redirectToTemplate'
+    _title: 'Edit default Canvas layout'
+  requirements:
+    _canvas_override_access: 'TRUE'
+    node: '\d+'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+canvas_override.node.canvas.reset:
+  path: '/node/{node}/canvas/reset'
+  defaults:
+    _controller: '\Drupal\canvas_override\Controller\CanvasResetController::reset'
+    _title: 'Reset Canvas layout'
+  requirements:
+    _canvas_override_access: 'TRUE'
+    node: '\d+'
+  options:
+    parameters:
+      node:
+        type: entity:node

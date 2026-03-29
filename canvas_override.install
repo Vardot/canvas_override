@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall hooks for Canvas Override.
+ */
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Cleans up third-party settings from all node types.
+ */
+function canvas_override_uninstall(): void {
+  $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+  foreach ($node_types as $node_type) {
+    if ($node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      $node_type->unsetThirdPartySetting('canvas_override', 'enabled');
+      $node_type->save();
+    }
+  }
+}

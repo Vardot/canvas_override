@@ -1,0 +1,22 @@
+{
+    "name": "drupal/canvas_override",
+    "description": "Lets site builders enable per-node Canvas-based layout editing on the full content view mode for selected content types.",
+    "type": "drupal-module",
+    "homepage": "https://www.drupal.org/project/canvas_override",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Vardot",
+            "homepage": "https://www.drupal.org/vardot",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/canvas_override",
+        "source": "http://cgit.drupalcode.org/canvas_override"
+    },
+    "require": {
+        "drupal/core": "~11.3.0",
+        "drupal/canvas": "^1.2"
+    }
+}

@@ -1,0 +1,6 @@
+services:
+  canvas_override.access_check:
+    class: Drupal\canvas_override\Access\CanvasTabAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _canvas_override_access }
