@@ -286,13 +286,19 @@ class CanvasOverrideHooks {
   public static function ensureCanvasField(string $bundle): void {
     $field_name = CANVAS_OVERRIDE_FIELD_NAME;
 
-    if (!FieldStorageConfig::loadByName('node', $field_name)) {
-      FieldStorageConfig::create([
+    $storage = FieldStorageConfig::loadByName('node', $field_name);
+    if (!$storage) {
+      $storage = FieldStorageConfig::create([
         'field_name' => $field_name,
         'entity_type' => 'node',
         'type' => 'component_tree',
         'settings' => [],
-      ])->save();
+        'locked' => TRUE,
+      ]);
+      $storage->save();
+    }
+    elseif (!$storage->isLocked()) {
+      $storage->setLocked(TRUE)->save();
     }
 
     if (!FieldConfig::loadByName('node', $bundle, $field_name)) {
