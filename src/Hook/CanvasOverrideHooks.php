@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Hook;
 
+use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Hook\Order\Order;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -177,10 +179,32 @@ class CanvasOverrideHooks {
   }
 
   /**
+   * Fields allowed in the Canvas editor Page data panel.
+   *
+   * Only these fields remain visible; everything else is removed so the
+   * per-node Canvas editor mirrors the Canvas Page entity experience.
+   */
+  private const CANVAS_FORM_ALLOWED_FIELDS = [
+    'title',
+    'field_seo_title',
+    'field_seo_description',
+    'field_seo_image',
+    'field_seo_analysis',
+    'path',
+    'uid',
+    'created',
+    'langcode',
+    'revision_log',
+    'simple_sitemap',
+  ];
+
+  /**
    * Implements hook_entity_form_display_alter().
    *
-   * Hides content-related fields from the per-entity Canvas editor's Page data
-   * panel when editing a canvas_override-enabled node.
+   * Strips the Canvas editor Page data panel down to only the fields that
+   * Canvas Page entities show (title, SEO, path, authoring, sitemap).
+   * All content-specific and scheduling fields are removed so editors use
+   * the standard node Edit form for those.
    */
   #[Hook('entity_form_display_alter')]
   public function entityFormDisplayAlter(EntityFormDisplayInterface $form_display, array $context): void {
@@ -201,17 +225,58 @@ class CanvasOverrideHooks {
       return;
     }
 
-    $fields_to_hide = [
-      'body',
-      'field_content',
-      'field_image',
-      'field_featured_image',
-      'field_media_image',
-      CANVAS_OVERRIDE_FIELD_NAME,
-    ];
+    foreach (array_keys($form_display->getComponents()) as $field_name) {
+      if (!in_array($field_name, self::CANVAS_FORM_ALLOWED_FIELDS, TRUE)) {
+        $form_display->removeComponent($field_name);
+      }
+    }
+  }
 
-    foreach ($fields_to_hide as $field_name) {
-      $form_display->removeComponent($field_name);
+  /**
+   * Implements hook_form_alter().
+   *
+   * Removes entity field form elements that modules inject via form_alter
+   * (scheduler, moderation_state, etc.) which bypass
+   * EntityFormDisplay::removeComponent(). Without this, Canvas core's
+   * filterFormValues() crashes on widgets with incomplete #parents arrays.
+   */
+  #[Hook('form_alter', order: Order::Last)]
+  public function formAlter(array &$form, FormStateInterface $form_state, string $form_id): void {
+    if (!\str_starts_with((string) $this->routeMatch->getRouteName(), 'canvas.api.')) {
+      return;
+    }
+
+    $form_object = $form_state->getFormObject();
+    if (!$form_object instanceof ContentEntityFormInterface) {
+      return;
+    }
+
+    $entity = $form_object->getEntity();
+    if (!$entity instanceof NodeInterface) {
+      return;
+    }
+
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($entity->bundle());
+    if (!$node_type instanceof NodeTypeInterface) {
+      return;
+    }
+    if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      return;
+    }
+
+    foreach (Element::children($form) as $key) {
+      if (in_array($key, self::CANVAS_FORM_ALLOWED_FIELDS, TRUE)) {
+        continue;
+      }
+      // Skip structural/non-field elements (groups, actions, form API keys).
+      if (!$entity->hasField($key)) {
+        continue;
+      }
+      // Fully unset entity field elements that modules injected via form_alter
+      // (e.g. scheduler, moderation_state). Setting #access alone is not enough
+      // because Canvas core's filterFormValues() accesses widget #parents before
+      // checking #access, causing a crash on incomplete widget structures.
+      unset($form[$key]);
     }
   }
 

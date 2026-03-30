@@ -7,3 +7,17 @@ services:
 
   Drupal\canvas_override\Hook\CanvasOverrideHooks:
     autowire: true
+
+  # Register the inner (original) constraint validator for injection.
+  canvas_override.inner_constraint_validator:
+    class: Drupal\canvas\Plugin\Validation\Constraint\ComponentTreeMeetsRequirementsConstraintValidator
+    autowire: true
+
+  # Override the constraint validator: ClassResolver checks container->has()
+  # with the FQCN returned by Constraint::validatedBy(), so this service ID
+  # must match the original validator class name exactly.
+  Drupal\canvas\Plugin\Validation\Constraint\ComponentTreeMeetsRequirementsConstraintValidator:
+    class: Drupal\canvas_override\Plugin\Validation\Constraint\CanvasOverrideConstraintValidator
+    arguments:
+      - '@canvas_override.inner_constraint_validator'
+      - '@entity_type.manager'
