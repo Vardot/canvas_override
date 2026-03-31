@@ -1,0 +1,11 @@
+administer canvas override:
+  title: 'Administer Canvas Override'
+  description: 'Enable or disable per-node Canvas layout editing on content types.'
+  restrict access: true
+
+use canvas override:
+  title: 'Use Canvas Override for all content types'
+  description: 'Edit per-node Canvas layouts on any Canvas Override-enabled content type.'
+
+permission_callbacks:
+  - Drupal\canvas_override\CanvasOverridePermissions::perBundlePermissions

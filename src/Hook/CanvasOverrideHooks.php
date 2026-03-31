@@ -91,6 +91,7 @@ class CanvasOverrideHooks {
       '#type' => 'details',
       '#title' => $this->t('Canvas layout'),
       '#group' => 'additional_settings',
+      '#access' => \Drupal::currentUser()->hasPermission('administer canvas override'),
     ];
 
     $form['canvas_override']['canvas_override_enabled'] = [
@@ -165,7 +166,10 @@ class CanvasOverrideHooks {
     }
 
     $current_user = \Drupal::currentUser();
-    if (!$current_user->hasPermission('administer content templates')) {
+    $bundle = $entity->bundle();
+    if (!$current_user->hasPermission('administer canvas override')
+      && !$current_user->hasPermission('use canvas override')
+      && !$current_user->hasPermission("use canvas override for $bundle")) {
       return [];
     }
 
