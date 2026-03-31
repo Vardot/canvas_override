@@ -1,0 +1,4 @@
+# Local GitLab CI runner files
+.gitlab-ci-local/
+.gitlab-ci-local.yml
+.gitlab-ci-local-variables.yml

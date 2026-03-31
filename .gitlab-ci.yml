@@ -29,35 +29,16 @@ variables:
   _PHPUNIT_EXTRA: --group canvas_override
 
 ################
-# Stages
-################
-stages:
-  - 🏗️ Build
-  - 🪄 Lint
-  - 🗜️ Test
-
-################
 # Build
 ################
 composer:
-  stage: 🏗️ Build
   variables:
     COMPOSER_EXTRA_DEPENDENCIES: drupal/canvas:^1.2
-
-################
-# Lint
-################
-phpcs:
-  stage: 🪄 Lint
-
-phpstan:
-  stage: 🪄 Lint
 
 ################
 # Test
 ################
 phpunit:
-  stage: 🗜️ Test
   parallel:
     matrix:
       - TESTSUITE:
