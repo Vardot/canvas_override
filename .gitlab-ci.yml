@@ -24,7 +24,7 @@ variables:
   OPT_IN_TEST_NEXT_MINOR: 0
   OPT_IN_TEST_PREVIOUS_MAJOR: 0
   OPT_IN_TEST_PREVIOUS_MINOR: 0
-  _TARGET_PHP: "8.3"
+  _TARGET_PHP: "8.4"
   SKIP_ESLINT: 1
   _PHPUNIT_EXTRA: --group canvas_override
 
@@ -33,7 +33,7 @@ variables:
 ################
 composer:
   variables:
-    COMPOSER_EXTRA_DEPENDENCIES: drupal/canvas:^1.2
+    COMPOSER_EXTRA_DEPENDENCIES: drupal/canvas:~1
   script:
     - composer config minimum-stability dev
     - composer config repositories.drupal composer https://packages.drupal.org/8

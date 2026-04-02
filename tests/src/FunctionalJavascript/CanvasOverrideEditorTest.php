@@ -8,7 +8,7 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\NodeType;
 
 /**
- * Tests the Canvas Override editor UI for per-node layouts.
+ * Tests the Canvas Override editor UI for per-content layouts.
  *
  * @group canvas_override
  */
@@ -91,7 +91,7 @@ class CanvasOverrideEditorTest extends WebDriverTestBase {
 
     // The Canvas local task tab should be present.
     $session = $this->assertSession();
-    $session->linkExists('Canvas');
+    $session->linkExists('Canvas Override');
   }
 
   /**
@@ -149,7 +149,7 @@ class CanvasOverrideEditorTest extends WebDriverTestBase {
 
     $article = $this->drupalCreateNode([
       'type' => 'article',
-      'title' => 'Article Node',
+      'title' => 'Article Content',
     ]);
 
     $this->drupalLogin($bundleUser);
