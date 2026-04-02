@@ -33,7 +33,7 @@ final class CanvasOverridePermissions {
 
       $permissions["use canvas override for $bundle"] = [
         'title' => $this->t('Use Canvas Override for %type content', ['%type' => $label]),
-        'description' => $this->t('Edit per-node Canvas layouts on %type nodes.', ['%type' => $label]),
+        'description' => $this->t('Edit per-content Canvas layouts on %type content.', ['%type' => $label]),
       ];
     }
 

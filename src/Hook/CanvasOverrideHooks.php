@@ -113,8 +113,8 @@ class CanvasOverrideHooks {
 
     $form['canvas_override']['canvas_override_enabled'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Enable per-node Canvas layout editing on the <em>full content</em> view mode'),
-      '#description' => $this->t('When enabled, each node of this type gets its own Canvas layout. A <strong>Canvas</strong> tab appears on every node, allowing editors to visually compose a unique page layout with Canvas components.'),
+      '#title' => $this->t('Enable per-content Canvas layout editing on the <em>full content</em> view mode'),
+      '#description' => $this->t('When enabled, each content item of this type gets its own Canvas layout. A <strong>Canvas Override</strong> tab appears on every content item, allowing editors to visually compose a unique page layout with Canvas components.'),
       '#default_value' => $is_enabled,
     ];
 
@@ -534,7 +534,7 @@ class CanvasOverrideHooks {
       }
     }
 
-    \Drupal::messenger()->addStatus(\t('A Canvas layout field has been added to this content type. Each node will have its own Canvas layout editable from the <strong>Canvas</strong> tab.'));
+    \Drupal::messenger()->addStatus(\t('A Canvas layout field has been added to this content type. Each content item will have its own Canvas layout editable from the <strong>Canvas</strong> tab.'));
   }
 
 }
