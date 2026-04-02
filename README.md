@@ -1,15 +1,15 @@
 # Canvas Override
 
-Lets site builders enable per-node Canvas-based layout editing on the full content view mode for selected content types.
+Lets site builders enable per-content Canvas-based layout editing on the full content view mode for selected content types.
 
 ## Overview
 
-Canvas Override provides Layout Builder-style per-node layout overrides using the [Canvas](https://www.drupal.org/project/canvas) module. When enabled for a content type, each node can have its own Canvas layout stored in a `field_canvas_layout` field. Nodes without a per-node layout fall back to the shared ContentTemplate default for the content type.
+Canvas Override provides Layout Builder-style per-content layout overrides using the [Canvas](https://www.drupal.org/project/canvas) module. When enabled for a content type, each content item can have its own Canvas layout stored in a `field_canvas_layout` field. Content without a custom layout falls back to the shared ContentTemplate default for the content type.
 
 ## Requirements
 
 - Drupal ~11.3.0
-- [drupal/canvas](https://www.drupal.org/project/canvas) ^1.2
+- [drupal/canvas](https://www.drupal.org/project/canvas) ^1
 
 ## Installation
 
@@ -31,27 +31,41 @@ This automatically:
 
 ## Usage
 
-Once enabled for a content type, editors see a **Canvas** tab on each node. Clicking it opens the per-node Canvas editor where they can visually compose a unique page layout.
+Once enabled for a content type, editors see a **Canvas** tab on each content item. Clicking it opens the per-content Canvas editor where they can visually compose a unique page layout.
 
 ### Routes
 
 | Path | Description |
 |------|-------------|
-| `/node/{node}/canvas` | Open the per-node Canvas editor |
+| `/node/{node}/canvas` | Open the per-content Canvas editor |
 | `/node/{node}/canvas/default` | Edit the shared ContentTemplate default layout |
-| `/node/{node}/canvas/reset` | Reset the node's layout to the content type default |
+| `/node/{node}/canvas/reset` | Reset the content layout to the content type default |
 
 ### Permissions
 
-Access to the Canvas tab and routes requires the `administer content templates` permission.
+Canvas Override provides three permission levels:
+
+- **Administer Canvas Override** — Enable or disable Canvas Override on content types.
+- **Use Canvas Override for all content types** — Edit per-content layouts on any enabled content type.
+- **Use Canvas Override for [type]** — Edit per-content layouts for a specific content type (generated dynamically).
 
 ## How It Works
 
-- `hook_entity_view_alter` — When a node has a non-empty `field_canvas_layout`, its rendered output is replaced entirely with the per-node canvas layout (using the `canvas_naive_render_sdc_tree` formatter). The standard `node.html.twig` wrapper is also removed since Canvas output is self-contained.
-- `hook_form_node_type_form_alter` — Adds the Canvas layout checkbox to the content type form.
-- `hook_node_type_presave` — Ensures the canvas field is created when a node type is saved programmatically with canvas_override enabled (e.g. via config import or recipes).
-- `hook_entity_form_display_alter` — Hides content fields (body, field_content, field_image, etc.) from the Page data panel in the per-entity Canvas editor, since their content is composed in the Canvas layout itself.
-- `hook_entity_operation` — Adds a **Canvas** operation link to node listings for users with the appropriate permission.
+- When content has a non-empty `field_canvas_layout`, its rendered output is
+  replaced entirely with the per-content Canvas layout. Content without a
+  custom layout falls back to the shared ContentTemplate default.
+- Content type forms include a **Canvas layout** fieldset where administrators
+  can enable or disable per-content layout editing.
+- The `field_canvas_layout` field is created automatically when Canvas Override
+  is enabled on a content type, including during config imports and recipe
+  installations.
+- Content fields (body, images, etc.) are hidden from the Canvas editor's Page
+  data panel. Editors use the standard Drupal edit form for field data and the
+  Canvas editor for layout.
+- A **Canvas** operation link appears in content listings for users with the
+  appropriate permission.
+
+For more details, see the [documentation](docs/index.md).
 
 ## Maintainer
 
