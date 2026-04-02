@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Hook;
 
+use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
@@ -37,6 +39,20 @@ class CanvasOverrideHooks {
     #[Autowire(service: 'entity_display.repository')]
     private readonly mixed $entityDisplayRepository,
   ) {}
+
+  /**
+   * Implements hook_entity_type_alter().
+   *
+   * Adds a validation constraint to nodes that restores required field values
+   * before validation. This runs early in the validation process to fix empty
+   * required fields before NotNull constraints are checked.
+   */
+  #[Hook('entity_type_alter')]
+  public function entityTypeAlter(array &$entity_types): void {
+    if (isset($entity_types['node'])) {
+      $entity_types['node']->addConstraint('CanvasOverrideRestoreRequiredFields');
+    }
+  }
 
   /**
    * Implements hook_entity_view_alter().
@@ -183,32 +199,11 @@ class CanvasOverrideHooks {
   }
 
   /**
-   * Fields allowed in the Canvas editor Page data panel.
-   *
-   * Only these fields remain visible; everything else is removed so the
-   * per-node Canvas editor mirrors the Canvas Page entity experience.
-   */
-  private const CANVAS_FORM_ALLOWED_FIELDS = [
-    'title',
-    'field_seo_title',
-    'field_seo_description',
-    'field_seo_image',
-    'field_seo_analysis',
-    'path',
-    'uid',
-    'created',
-    'langcode',
-    'revision_log',
-    'simple_sitemap',
-  ];
-
-  /**
    * Implements hook_entity_form_display_alter().
    *
-   * Strips the Canvas editor Page data panel down to only the fields that
-   * Canvas Page entities show (title, SEO, path, authoring, sitemap).
-   * All content-specific and scheduling fields are removed so editors use
-   * the standard node Edit form for those.
+   * Removes all field components from the form display for canvas_override
+   * enabled nodes. Only field_canvas_layout is saved; all other fields use
+   * the standard node Edit form.
    */
   #[Hook('entity_form_display_alter')]
   public function entityFormDisplayAlter(EntityFormDisplayInterface $form_display, array $context): void {
@@ -230,19 +225,19 @@ class CanvasOverrideHooks {
     }
 
     foreach (array_keys($form_display->getComponents()) as $field_name) {
-      if (!in_array($field_name, self::CANVAS_FORM_ALLOWED_FIELDS, TRUE)) {
-        $form_display->removeComponent($field_name);
+      if ($field_name === 'title') {
+        continue;
       }
+      $form_display->removeComponent($field_name);
     }
   }
 
   /**
    * Implements hook_form_alter().
    *
-   * Removes entity field form elements that modules inject via form_alter
-   * (scheduler, moderation_state, etc.) which bypass
-   * EntityFormDisplay::removeComponent(). Without this, Canvas core's
-   * filterFormValues() crashes on widgets with incomplete #parents arrays.
+   * Hides all entity field form elements for canvas_override enabled nodes.
+   * Only field_canvas_layout is saved; all other fields use the standard
+   * node Edit form.
    */
   #[Hook('form_alter', order: Order::Last)]
   public function formAlter(array &$form, FormStateInterface $form_state, string $form_id): void {
@@ -268,20 +263,196 @@ class CanvasOverrideHooks {
       return;
     }
 
+    // Unset all entity field elements except title. Only field_canvas_layout
+    // and title are saved; all other fields use the standard node Edit form.
+    // We unset() rather than setting #access = FALSE because Canvas core's
+    // extractFormValues() still processes #access = FALSE widgets, clearing
+    // field values and causing entity validation to fail with null values.
     foreach (Element::children($form) as $key) {
-      if (in_array($key, self::CANVAS_FORM_ALLOWED_FIELDS, TRUE)) {
+      if ($key === 'title' || !$entity->hasField($key)) {
         continue;
       }
-      // Skip structural/non-field elements (groups, actions, form API keys).
-      if (!$entity->hasField($key)) {
-        continue;
-      }
-      // Fully unset entity field elements that modules injected via form_alter
-      // (e.g. scheduler, moderation_state). Setting #access alone is not enough
-      // because Canvas core's filterFormValues() accesses widget #parents before
-      // checking #access, causing a crash on incomplete widget structures.
       unset($form[$key]);
     }
+  }
+
+  /**
+   * Implements hook_node_field_values_init().
+   *
+   * When a node is being initialized (e.g., from auto-save data), this hook
+   * ensures required fields have their original values from the database.
+   * This prevents validation failures for required fields that are not being
+   * edited in Canvas Override but may have been cleared from the auto-save.
+   */
+  #[Hook('node_field_values_init')]
+  public function nodeFieldValuesInit(NodeInterface $node): void {
+    if (!\str_starts_with((string) $this->routeMatch->getRouteName(), 'canvas.api.')) {
+      return;
+    }
+
+    // Skip if no ID (truly new node).
+    if (!$node->id()) {
+      return;
+    }
+
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($node->bundle());
+    if (!$node_type instanceof NodeTypeInterface) {
+      return;
+    }
+    if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      return;
+    }
+
+    // Load the original node from the database.
+    $original = $this->entityTypeManager->getStorage('node')->loadUnchanged($node->id());
+    if (!$original instanceof NodeInterface) {
+      return;
+    }
+
+    // Fields that are being edited in Canvas Override - don't restore these.
+    $preserved_fields = ['title', CANVAS_OVERRIDE_FIELD_NAME];
+
+    foreach ($node->getFieldDefinitions() as $field_name => $definition) {
+      if (in_array($field_name, $preserved_fields, TRUE)) {
+        continue;
+      }
+      // Restore field values from original if current is empty.
+      if ($original->hasField($field_name) && $node->hasField($field_name)) {
+        $current_value = $node->get($field_name)->getValue();
+        $original_value = $original->get($field_name)->getValue();
+        // Restore if current is empty but original has a value.
+        if (empty($current_value) && !empty($original_value)) {
+          $node->set($field_name, $original_value);
+        }
+      }
+    }
+  }
+
+  /**
+   * Implements hook_entity_bundle_field_info_alter().
+   *
+   * Removes the NotNull constraint from required fields during Canvas API
+   * requests for canvas_override-enabled node types. This prevents validation
+   * failures for required fields that are not being edited in Canvas Override.
+   */
+  #[Hook('entity_bundle_field_info_alter')]
+  public function entityBundleFieldInfoAlter(array &$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type, string $bundle): void {
+    if ($entity_type->id() !== 'node') {
+      return;
+    }
+
+    if (!\str_starts_with((string) $this->routeMatch->getRouteName(), 'canvas.api.')) {
+      return;
+    }
+
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($bundle);
+    if (!$node_type instanceof NodeTypeInterface) {
+      return;
+    }
+    if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      return;
+    }
+
+    // Fields that should retain their constraints (being edited in Canvas).
+    $preserved_fields = ['title', CANVAS_OVERRIDE_FIELD_NAME];
+
+    foreach ($fields as $field_name => $field) {
+      if (in_array($field_name, $preserved_fields, TRUE)) {
+        continue;
+      }
+      // Remove NotNull constraint from fields not being edited in Canvas Override.
+      if ($field instanceof FieldConfig) {
+        $constraints = $field->getConstraints();
+        if (isset($constraints['NotNull'])) {
+          unset($constraints['NotNull']);
+          $field->setConstraints($constraints);
+        }
+      }
+    }
+  }
+
+  /**
+   * Implements hook_node_presave().
+   *
+   * Restores required field values that may have been cleared during Canvas
+   * form processing. When Canvas Override removes fields from the form display
+   * for node override editing, required fields like ai_automator_status can
+   * get set to null. This hook restores them from the original entity.
+   */
+  #[Hook('node_presave')]
+  public function nodePresave(NodeInterface $node): void {
+    if (!\str_starts_with((string) $this->routeMatch->getRouteName(), 'canvas.api.')) {
+      return;
+    }
+
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($node->bundle());
+    if (!$node_type instanceof NodeTypeInterface) {
+      return;
+    }
+    if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      return;
+    }
+
+    // If the node is new, nothing to restore.
+    if ($node->isNew()) {
+      return;
+    }
+
+    // Load the original node from the database.
+    $original = $this->entityTypeManager->getStorage('node')->loadUnchanged($node->id());
+    if (!$original instanceof NodeInterface) {
+      return;
+    }
+
+    // Restore all field values except title and field_canvas_layout.
+    // These are the only fields that should be modified in Canvas Override.
+    $preserved_fields = ['title', CANVAS_OVERRIDE_FIELD_NAME];
+    foreach ($node->getFieldDefinitions() as $field_name => $definition) {
+      if (in_array($field_name, $preserved_fields, TRUE)) {
+        continue;
+      }
+      // Only restore if the field exists on the original and the current
+      // value is empty but the original has a value.
+      if ($original->hasField($field_name) && $node->hasField($field_name)) {
+        $current_value = $node->get($field_name)->getValue();
+        $original_value = $original->get($field_name)->getValue();
+        // Restore if current is empty but original is not, or if the field
+        // is required and current is empty.
+        if (empty($current_value) && !empty($original_value)) {
+          $node->set($field_name, $original_value);
+        }
+      }
+    }
+  }
+
+  /**
+   * Implements hook_js_settings_alter().
+   *
+   * Injects a flag telling the Canvas React app to hide the Page data panel
+   * when editing a canvas_override-enabled node. Nodes use the standard Drupal
+   * edit form for their field data; the Page data panel is not needed here.
+   */
+  #[Hook('js_settings_alter')]
+  public function jsSettingsAlter(array &$settings, AttachedAssetsInterface $assets): void {
+    $entity_type = $this->routeMatch->getParameter('entity_type');
+    if ($entity_type !== 'node') {
+      return;
+    }
+
+    $entity = $this->routeMatch->getParameter('entity');
+    if (!$entity instanceof NodeInterface) {
+      return;
+    }
+
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($entity->bundle());
+    if (!$node_type instanceof NodeTypeInterface) {
+      return;
+    }
+    if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      return;
+    }
+
+    $settings['canvas']['hidePageDataPanel'] = TRUE;
   }
 
   /**
