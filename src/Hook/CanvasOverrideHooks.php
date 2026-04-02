@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Hook\Order\Order;
+use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -462,7 +463,7 @@ class CanvasOverrideHooks {
    * type. Nodes with canvas_override use per-node Canvas layouts and should
    * only show "Canvas Override" and "Reset to default layout" options.
    */
-  #[Hook('menu_local_tasks_alter')]
+  #[Hook('menu_local_tasks_alter', order: new OrderAfter(modules: ['drupal_cms_helper']))]
   public function menuLocalTasksAlter(array &$data, string $route_name): void {
     if ($route_name !== 'entity.node.canonical' && $route_name !== 'entity.node.edit_form') {
       return;
@@ -483,8 +484,9 @@ class CanvasOverrideHooks {
     }
 
     // Hide the "Edit template" tab for canvas_override enabled content types.
-    if (isset($data['tabs'][0]['canvas.node.template'])) {
-      unset($data['tabs'][0]['canvas.node.template']);
+    // The tab is added by drupal_cms_helper with ID 'entity.node.template'.
+    if (isset($data['tabs'][0]['entity.node.template'])) {
+      unset($data['tabs'][0]['entity.node.template']);
     }
   }
 
