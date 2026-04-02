@@ -456,6 +456,39 @@ class CanvasOverrideHooks {
   }
 
   /**
+   * Implements hook_menu_local_tasks_alter().
+   *
+   * Hides the "Edit template" tab when canvas_override is enabled for a content
+   * type. Nodes with canvas_override use per-node Canvas layouts and should
+   * only show "Canvas Override" and "Reset to default layout" options.
+   */
+  #[Hook('menu_local_tasks_alter')]
+  public function menuLocalTasksAlter(array &$data, string $route_name): void {
+    if ($route_name !== 'entity.node.canonical' && $route_name !== 'entity.node.edit_form') {
+      return;
+    }
+
+    $node = $this->routeMatch->getParameter('node');
+    if (!$node instanceof NodeInterface) {
+      return;
+    }
+
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($node->bundle());
+    if (!$node_type instanceof NodeTypeInterface) {
+      return;
+    }
+
+    if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
+      return;
+    }
+
+    // Hide the "Edit template" tab for canvas_override enabled content types.
+    if (isset($data['tabs'][0]['canvas.node.template'])) {
+      unset($data['tabs'][0]['canvas.node.template']);
+    }
+  }
+
+  /**
    * Adds a component_tree field to the content type and configures the display.
    */
   public static function ensureCanvasField(string $bundle): void {
