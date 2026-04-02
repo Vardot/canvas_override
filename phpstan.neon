@@ -1,0 +1,11 @@
+includes:
+  - phpstan-baseline.neon
+
+parameters:
+  ignoreErrors:
+    # Canvas Override intentionally extends Canvas final classes to override behavior.
+    - identifier: class.extendsFinal
+    - identifier: method.staticCall
+    - identifier: property.private
+    - identifier: method.private
+    - identifier: globalDrupalDependencyInjection.useDependencyInjection

@@ -12,7 +12,7 @@
     "yarn.lock",
     ".yarnrc.yml",
     ".yarn/*",
-    ".cspell/dictionary.txt"
+    ".cspell-project-words.txt"
   ],
   "ignoreRegExpList": [
     "^msgstr .*",
@@ -22,7 +22,7 @@
     "\\x{[0-9A-F]{4,5}}"
   ],
   "dictionaries": [
-    "dictionary",
+    "project-words",
     "companies",
     "fonts",
     "html",
@@ -31,16 +31,23 @@
   ],
   "dictionaryDefinitions": [
     {
-      "name": "dictionary",
-      "path": "./.cspell/dictionary.txt"
+      "name": "project-words",
+      "path": "./.cspell-project-words.txt",
+      "addWords": true
     }
   ],
   "flagWords": [
+    "blacklist",
+    "blacklists",
+    "blacklisted",
     "e-mail",
     "grey",
     "hte",
     "ist",
     "queuing",
+    "whitelist",
+    "whitelists",
+    "whitelisted",
     "writeable"
   ],
   "overrides": [
