@@ -42,6 +42,7 @@ composer:
     - composer config --no-plugins allow-plugins.oomphinc/composer-installers-extender true
     - composer config --no-plugins allow-plugins.phpstan/extension-installer true
     - composer config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+    - composer config --no-plugins allow-plugins.drupal/core-composer-scaffold true
     - composer require --no-update cweagans/composer-patches:~1
     - |
       composer config extra.patches --json '{"drupal/canvas": {"feat: #3567225 Support per-entity Canvas layouts with field linking and template copying": "https://raw.githubusercontent.com/vardot/varbase-patches/refs/heads/patches/canvas--2026-04-02--3567225.patch"}}'
