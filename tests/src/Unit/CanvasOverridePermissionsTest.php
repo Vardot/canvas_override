@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\canvas_override\Unit;
 
 use Drupal\canvas_override\CanvasOverridePermissions;
-use Drupal\node\Entity\NodeType;
 use Drupal\Tests\UnitTestCase;
 
 /**

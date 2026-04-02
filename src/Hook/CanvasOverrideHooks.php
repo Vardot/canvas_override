@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Hook;
 
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
@@ -337,7 +337,7 @@ class CanvasOverrideHooks {
    * failures for required fields that are not being edited in Canvas Override.
    */
   #[Hook('entity_bundle_field_info_alter')]
-  public function entityBundleFieldInfoAlter(array &$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type, string $bundle): void {
+  public function entityBundleFieldInfoAlter(array &$fields, EntityTypeInterface $entity_type, string $bundle): void {
     if ($entity_type->id() !== 'node') {
       return;
     }

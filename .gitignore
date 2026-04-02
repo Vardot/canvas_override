@@ -2,3 +2,9 @@
 .gitlab-ci-local/
 .gitlab-ci-local.yml
 .gitlab-ci-local-variables.yml
+
+# Ignore node modules
+node_modules
+/*/node_modules
+.yarn/
+.yarn/install-state.gz

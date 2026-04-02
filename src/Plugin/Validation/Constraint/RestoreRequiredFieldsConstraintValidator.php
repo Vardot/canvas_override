@@ -82,11 +82,11 @@ class RestoreRequiredFieldsConstraintValidator extends ConstraintValidator imple
 
       // Check if field is required or has NotNull constraint.
       $is_required = $definition->isRequired();
-      
+
       if ($is_required && $original->hasField($field_name) && $value->hasField($field_name)) {
         $current_value = $value->get($field_name)->getValue();
         $original_value = $original->get($field_name)->getValue();
-        
+
         // Restore if current is empty but original has a value.
         if (empty($current_value) && !empty($original_value)) {
           $value->set($field_name, $original_value);

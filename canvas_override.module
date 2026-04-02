@@ -2,6 +2,8 @@
 
 /**
  * @file
+ * Canvas Override module file.
+ *
  * Lets site builders enable per-node Canvas layout editing on the full content
  * view mode for selected content types.
  */

@@ -6,8 +6,6 @@ namespace Drupal\Tests\canvas_override\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\NodeType;
-use Drupal\user\Entity\Role;
-use Drupal\user\Entity\User;
 
 /**
  * Tests Canvas Override module installation and permissions.
