@@ -2,10 +2,13 @@ includes:
   - phpstan-baseline.neon
 
 parameters:
+  level: 2
   ignoreErrors:
-    # Canvas Override intentionally extends Canvas final classes to override behavior.
-    - identifier: class.extendsFinal
-    - identifier: method.staticCall
-    - identifier: property.private
-    - identifier: method.private
     - identifier: globalDrupalDependencyInjection.useDependencyInjection
+    # getEntity() is available at runtime on typed data parents but not declared on the interface.
+    - identifier: method.notFound
+  # Canvas Override intentionally extends ContentTemplateAwareViewBuilder which Canvas declares
+  # as final. The Canvas issue #3567225 patch removes the final keyword; this exclusion covers
+  # the file until that patch is merged into a stable release.
+  excludePaths:
+    - src/EntityHandlers/CanvasOverrideNodeViewBuilder.php

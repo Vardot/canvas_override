@@ -1,4 +1,7 @@
 services:
+  Drupal\canvas_override\CanvasOverridePermissions:
+    arguments: ['@entity_type.manager']
+
   canvas_override.access_check:
     class: Drupal\canvas_override\Access\CanvasTabAccessCheck
     arguments: ['@entity_type.manager']

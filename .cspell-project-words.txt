@@ -1,4 +1,5 @@
 automator
+topbar
 canvas
 customisation
 customise

@@ -1,5 +1,7 @@
 # Architecture
 
+How Canvas Override integrates with the Canvas module and Drupal.
+
 ## Overview
 
 Canvas Override integrates with the Canvas module through service decoration,
@@ -9,12 +11,12 @@ architectural decisions and how the module's components fit together.
 ## Core Concept
 
 The Canvas module provides visual page building through **ContentTemplates**
-defined at the content type level. Canvas Override adds a per-node layer by:
+defined at the content type level. Canvas Override adds a per-content layer by:
 
 1. Adding a `field_canvas_layout` (component_tree) field to content types.
 2. Overriding Canvas's `ComponentTreeLoader` to support nodes as canvas
    entities.
-3. Splitting the view builder to handle per-node vs. template rendering.
+3. Splitting the view builder to handle per-content vs. template rendering.
 4. Managing required field validation during Canvas API requests.
 
 ## Module Components
@@ -43,10 +45,10 @@ allows nodes to be treated as valid canvas entities.
 `ContentTemplateAwareViewBuilder`:
 
 - Splits entities into two groups in `buildComponents()`:
-  - **Override entities**: Nodes with non-empty `field_canvas_layout` -
+  - **Override entities**: Nodes with non-empty `field_canvas_layout` —
     rendered via the decorated view builder (field renders directly).
-  - **Template entities**: Nodes without per-node layout - rendered via parent
-    class logic (uses ContentTemplate).
+  - **Template entities**: Nodes without per-content layout — rendered via
+    parent class logic (uses ContentTemplate).
 - Adds appropriate cache contexts for both paths.
 
 ### Constraint Validator Decorator
@@ -56,7 +58,7 @@ allows nodes to be treated as valid canvas entities.
 
 - For Canvas Override-enabled nodes: removes `EntityField` and
   `HostEntityUrl` from the "absence" constraint, allowing field linking on
-  per-node layouts.
+  per-content layouts.
 - For other entities: delegates to the original validator.
 
 The service ID matches the original class name (required for Drupal's
@@ -108,7 +110,7 @@ Node view requested
     → Splits into override_entities and template_entities
     → Override: renders field_canvas_layout directly
     → Template: uses ContentTemplate via parent class
-  → If node has per-node layout: output replaced with field_canvas_layout
+  → If node has per-content layout: output replaced with field_canvas_layout
     → Theme wrapper removed (Canvas output is self-contained)
 ```
 
@@ -150,6 +152,6 @@ Drupal\canvas\Plugin\...\ComponentTreeMeetsRequirementsConstraintValidator:
 
 ## Next Steps
 
-- [Hooks and Services](1-hooks-and-services.md) - Detailed hook documentation.
-- [API Reference](2-api-reference.md) - Key classes and methods.
-- [Testing](3-testing.md) - Running and writing tests.
+- [Services and Extension Points](1-hooks-and-services.md) — Detailed service
+  documentation
+- [API Reference](2-api-reference.md) — Key classes and methods

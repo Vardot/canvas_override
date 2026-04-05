@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\node\Entity\NodeType;
 
 /**
  * Provides dynamic per-content-type permissions for Canvas Override.
@@ -13,6 +13,10 @@ use Drupal\node\Entity\NodeType;
 final class CanvasOverridePermissions {
 
   use StringTranslationTrait;
+
+  public function __construct(
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+  ) {}
 
   /**
    * Returns per-bundle permissions for each Canvas Override-enabled content type.
@@ -23,7 +27,7 @@ final class CanvasOverridePermissions {
   public function perBundlePermissions(): array {
     $permissions = [];
 
-    foreach (NodeType::loadMultiple() as $node_type) {
+    foreach ($this->entityTypeManager->getStorage('node_type')->loadMultiple() as $node_type) {
       if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
         continue;
       }

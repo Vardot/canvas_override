@@ -27,26 +27,10 @@ variables:
   _TARGET_PHP: "8.4"
   SKIP_ESLINT: 1
   _PHPUNIT_EXTRA: --group canvas_override
-
-################
-# Build
-################
-composer:
-  variables:
-    COMPOSER_EXTRA_DEPENDENCIES: drupal/canvas:~1
-  script:
-    - composer config minimum-stability dev
-    - composer config repositories.drupal composer https://packages.drupal.org/8
-    - composer config --no-plugins allow-plugins.composer/installers true
-    - composer config --no-plugins allow-plugins.cweagans/composer-patches true
-    - composer config --no-plugins allow-plugins.oomphinc/composer-installers-extender true
-    - composer config --no-plugins allow-plugins.phpstan/extension-installer true
-    - composer config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-    - composer config --no-plugins allow-plugins.drupal/core-composer-scaffold true
-    - composer require --no-update cweagans/composer-patches:~1
-    - |
-      composer config extra.patches --json '{"drupal/canvas": {"feat: #3567225 Support per-entity Canvas layouts with field linking and template copying": "https://raw.githubusercontent.com/vardot/varbase-patches/refs/heads/patches/canvas--2026-04-02--3567225.patch"}}'
-    - composer install -vvv
+  # Apply the Canvas issue #3567225 patch via the DrupalCI template mechanism.
+  # The template's expand_composer_json.php merges this into the test project's
+  # composer.json so cweagans/composer-patches applies it during composer install.
+  _COMPOSER_PATCHES_FILE: ".gitlab-ci/patches.json"
 
 ################
 # Test

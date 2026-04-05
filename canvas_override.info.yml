@@ -2,7 +2,7 @@ name: Canvas Override
 description: Lets site builders enable per-content Canvas-based layout editing on the full content view mode for selected content types.
 type: module
 package: Drupal Canvas
-core_version_requirement: ~11.3.0
+core_version_requirement: ^11.3
 dependencies:
   - drupal:node
   - drupal:field

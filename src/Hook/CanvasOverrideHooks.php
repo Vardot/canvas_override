@@ -100,8 +100,10 @@ class CanvasOverrideHooks {
    */
   #[Hook('form_node_type_form_alter')]
   public function formNodeTypeFormAlter(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+    $form_object = $form_state->getFormObject();
     /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = $form_state->getFormObject()->getEntity();
+    $node_type = $form_object->getEntity();
     $is_enabled = (bool) $node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE);
 
     $form['canvas_override'] = [
@@ -130,8 +132,10 @@ class CanvasOverrideHooks {
    * Submit handler: persists the Canvas setting and ensures the field exists.
    */
   public static function nodeTypeFormSubmit(array &$form, FormStateInterface $form_state): void {
+    /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+    $form_object = $form_state->getFormObject();
     /** @var \Drupal\node\NodeTypeInterface $node_type */
-    $node_type = $form_state->getFormObject()->getEntity();
+    $node_type = $form_object->getEntity();
     $enabled = (bool) $form_state->getValue('canvas_override_enabled');
     $was_enabled = (bool) $form_state->getValue('canvas_override_was_enabled');
 

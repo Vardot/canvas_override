@@ -8,7 +8,6 @@ use Drupal\canvas_override\CanvasOverridePermissions;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\node\NodeTypeInterface;
 use Drupal\Tests\UnitTestCase;
 
@@ -47,18 +46,15 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
       ->with('node_type')
       ->willReturn($this->nodeTypeStorage);
 
-    $translation = $this->createMock(TranslationInterface::class);
-    $translation->method('translateString')
-      ->willReturnCallback(function ($string) {
-        return $string;
-      });
+    $translation = $this->getStringTranslationStub();
 
     $container = new ContainerBuilder();
     $container->set('entity_type.manager', $entity_type_manager);
     $container->set('string_translation', $translation);
     \Drupal::setContainer($container);
 
-    $this->permissions = new CanvasOverridePermissions();
+    $this->permissions = new CanvasOverridePermissions($entity_type_manager);
+    $this->permissions->setStringTranslation($translation);
   }
 
   /**
@@ -229,8 +225,6 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
 
   /**
    * Tests that the class can be instantiated.
-   *
-   * @covers ::__construct
    */
   public function testClassInstantiation(): void {
     $this->assertInstanceOf(CanvasOverridePermissions::class, $this->permissions);

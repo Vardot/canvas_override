@@ -1,10 +1,6 @@
 # Services and Extension Points
 
-## Overview
-
-Canvas Override integrates with the Canvas module through service decoration,
-constraint validation, and a custom component tree loader. This document
-covers the key services and how to extend them.
+Canvas Override's key services, third-party settings, and how to extend them.
 
 ## Services
 
@@ -21,7 +17,7 @@ covers the key services and how to extend them.
 - **Class**: `CanvasOverrideConstraintValidator`
 - **Decorates**: Canvas's `ComponentTreeMeetsRequirementsConstraintValidator`
 - **Purpose**: Allows field linking (EntityField and HostEntityUrl prop
-  sources) on per-node Canvas layouts.
+  sources) on per-content Canvas layouts.
 - **Note**: The service ID must match the original class name for Drupal's
   `ClassResolver` to resolve it correctly.
 
@@ -36,7 +32,7 @@ covers the key services and how to extend them.
 ### CanvasOverrideNodeViewBuilder
 
 - **Extends**: Canvas's `ContentTemplateAwareViewBuilder`
-- **Purpose**: Splits rendering between nodes with per-node layouts (rendered
+- **Purpose**: Splits rendering between nodes with per-content layouts (rendered
   directly from `field_canvas_layout`) and nodes without (rendered via
   ContentTemplate).
 
@@ -46,7 +42,7 @@ Canvas Override uses Drupal's third-party settings on `NodeType` entities:
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `canvas_override.enabled` | `bool` | Whether per-node Canvas layouts are enabled for this content type |
+| `canvas_override.enabled` | `bool` | Whether per-content Canvas layouts are enabled for this content type |
 
 ### Reading the Setting
 
@@ -71,6 +67,7 @@ CanvasOverrideHooks::ensureCanvasField('article');
 ```
 
 This creates:
+
 - Field storage (type: `component_tree`, locked).
 - Field config (label: "Canvas Layout").
 - View display on `full` and `default` view modes with the
@@ -78,5 +75,5 @@ This creates:
 
 ## Next Steps
 
-- [Architecture](0-architecture.md) - High-level design overview.
-- [API Reference](2-api-reference.md) - Key classes and methods.
+- [Architecture](0-architecture.md) — High-level design overview
+- [API Reference](2-api-reference.md) — Key classes and methods

@@ -32,7 +32,7 @@ class RestoreRequiredFieldsConstraintValidator extends ConstraintValidator imple
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
-    return new static(
+    return new self(
       $container->get('entity_type.manager'),
       $container->get('current_route_match'),
     );

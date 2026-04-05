@@ -16,7 +16,7 @@
         "source": "http://cgit.drupalcode.org/canvas_override"
     },
     "require": {
-        "drupal/core": "~11.3.0",
+        "drupal/core": "^11",
         "drupal/canvas": "~1"
     }
 }

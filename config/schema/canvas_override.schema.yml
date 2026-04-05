@@ -1,0 +1,7 @@
+node.type.*.third_party.canvas_override:
+  type: mapping
+  label: 'Canvas Override node type settings'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enable per-content Canvas layout editing'
