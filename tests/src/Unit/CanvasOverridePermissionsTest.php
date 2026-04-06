@@ -116,6 +116,9 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
   /**
    * Tests permission generation for a single enabled content type.
    *
+   * Each enabled type generates two permissions: one for editing per-content
+   * layouts and one for resetting them.
+   *
    * @covers ::perBundlePermissions
    */
   public function testSingleEnabledContentType(): void {
@@ -127,10 +130,13 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
 
     $result = $this->permissions->perBundlePermissions();
 
-    $this->assertCount(1, $result);
+    $this->assertCount(3, $result);
     $this->assertArrayHasKey('use canvas override for article', $result);
+    $this->assertArrayHasKey('reset canvas layout for article', $result);
+    $this->assertArrayHasKey('edit canvas default template for article', $result);
     $this->assertNotEmpty((string) $result['use canvas override for article']['title']);
-    $this->assertNotEmpty((string) $result['use canvas override for article']['description']);
+    $this->assertNotEmpty((string) $result['reset canvas layout for article']['title']);
+    $this->assertNotEmpty((string) $result['edit canvas default template for article']['title']);
   }
 
   /**
@@ -150,15 +156,24 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
 
     $result = $this->permissions->perBundlePermissions();
 
-    $this->assertCount(2, $result);
+    // 2 enabled types × 3 permissions each = 6.
+    $this->assertCount(6, $result);
     $this->assertArrayHasKey('use canvas override for article', $result);
+    $this->assertArrayHasKey('reset canvas layout for article', $result);
+    $this->assertArrayHasKey('edit canvas default template for article', $result);
     $this->assertArrayHasKey('use canvas override for landing_page', $result);
+    $this->assertArrayHasKey('reset canvas layout for landing_page', $result);
+    $this->assertArrayHasKey('edit canvas default template for landing_page', $result);
     $this->assertArrayNotHasKey('use canvas override for page', $result);
+    $this->assertArrayNotHasKey('reset canvas layout for page', $result);
+    $this->assertArrayNotHasKey('edit canvas default template for page', $result);
     $this->assertArrayNotHasKey('use canvas override for blog', $result);
+    $this->assertArrayNotHasKey('reset canvas layout for blog', $result);
+    $this->assertArrayNotHasKey('edit canvas default template for blog', $result);
   }
 
   /**
-   * Tests that permission keys follow the expected naming convention.
+   * Tests that permission keys follow the expected naming conventions.
    *
    * @covers ::perBundlePermissions
    */
@@ -174,7 +189,7 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
 
     foreach (array_keys($result) as $key) {
       $this->assertMatchesRegularExpression(
-        '/^use canvas override for [a-z_]+$/',
+        '/^(use canvas override|reset canvas layout|edit canvas default template) for [a-z_]+$/',
         $key,
       );
     }
@@ -193,10 +208,11 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
       ]);
 
     $result = $this->permissions->perBundlePermissions();
-    $permission = $result['use canvas override for article'];
 
-    $this->assertArrayHasKey('title', $permission);
-    $this->assertArrayHasKey('description', $permission);
+    foreach ($result as $permission) {
+      $this->assertArrayHasKey('title', $permission);
+      $this->assertArrayHasKey('description', $permission);
+    }
   }
 
   /**
@@ -217,9 +233,12 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
 
     $result = $this->permissions->perBundlePermissions();
 
-    $this->assertCount(3, $result);
+    // 3 enabled types × 3 permissions each = 9.
+    $this->assertCount(9, $result);
     foreach (array_keys($types) as $bundle) {
       $this->assertArrayHasKey("use canvas override for $bundle", $result);
+      $this->assertArrayHasKey("reset canvas layout for $bundle", $result);
+      $this->assertArrayHasKey("edit canvas default template for $bundle", $result);
     }
   }
 

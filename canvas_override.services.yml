@@ -8,6 +8,12 @@ services:
     tags:
       - { name: access_check, applies_to: _canvas_override_access }
 
+  canvas_override.reset_access_check:
+    class: Drupal\canvas_override\Access\CanvasResetAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _canvas_reset_access }
+
   Drupal\canvas_override\Hook\CanvasOverrideHooks:
     autowire: true
 

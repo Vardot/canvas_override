@@ -4,9 +4,10 @@ Learn how to control who can manage and use Canvas Override on your site.
 
 ## Overview
 
-Canvas Override provides a three-tier permission system that gives
-administrators fine-grained control over per-content layout editing. Permissions
-are managed through Drupal's standard permissions interface.
+Canvas Override provides a four-tier permission system that gives
+administrators fine-grained control over per-content layout editing and shared
+template access. Permissions are managed through Drupal's standard permissions
+interface.
 
 ## Available Permissions
 
@@ -46,17 +47,51 @@ content types.
 Assign these to **section editors** who should only modify layouts for their
 content types.
 
+### Reset Canvas Layout to Default
+
+- **Machine name**: `reset canvas layout`
+- **Restricted**: No
+- **Purpose**: Access the **Reset to default layout** tab to clear a
+  per-content Canvas layout and revert the content item to the shared
+  ContentTemplate default.
+- **Grants access to**: The Reset to default layout local task tab and the
+  `/node/{id}/canvas/reset` route on Canvas Override-enabled content.
+
+Without this permission, the Reset tab is hidden unless the user also has
+`administer canvas override` or `use canvas override` (those always include
+reset access). Assign this to editors who should be able to reset layouts
+without necessarily being able to create or edit them — for example, a
+content manager who removes expired overrides.
+
+### Edit Canvas Default Template
+
+- **Machine name**: `edit canvas default template`
+- **Restricted**: Yes (only assignable by users with "administer permissions")
+- **Purpose**: Access the **Edit template** tab to edit the shared
+  ContentTemplate default layout for Canvas Override-enabled content types.
+- **Grants access to**: The Edit template local task tab on nodes whose content
+  type has Canvas Override enabled.
+
+Without this permission, the Edit template tab is hidden for that user.
+Assign this to **site builders** or **layout administrators** who are
+responsible for managing the shared default layout used by all content items
+that do not have a per-content override.
+
 ## Permission Hierarchy
 
 ```
 administer canvas override
   └── Full access to all Canvas Override features
         ├── Enable/disable on content types
-        ├── Canvas tab on all enabled content
-        └── Reset layout on all enabled content
+        ├── Canvas Override tab on all enabled content
+        ├── Reset to default layout tab on all enabled content
+        └── Edit template tab on all enabled content
+
+edit canvas default template
+  └── Edit template tab on Canvas Override-enabled content
 
 use canvas override
-  └── Canvas tab and reset on ALL enabled content types
+  └── Canvas Override tab and Reset tab on ALL enabled content types
 
 use canvas override for {bundle}
   └── Canvas tab and reset on ONE specific content type
@@ -104,14 +139,15 @@ drush role:perm:list editor | grep canvas
 
 ## Recommended Setup by Role
 
-| Role | Permission | Reason |
-|------|-----------|--------|
-| Administrator | Administer Canvas Override | Full control over configuration and all layouts |
-| Content Lead | Use Canvas Override (global) | Manages layouts across all content types |
-| Article Editor | Use Canvas Override for Article | Only edits article layouts |
-| Event Editor | Use Canvas Override for Event | Only edits event layouts |
-| Authenticated User | (none) | No layout editing access |
-| Anonymous User | (none) | Never grant Canvas Override permissions |
+| Role | Permissions | Tabs visible |
+|------|-------------|-------------|
+| Administrator | Administer Canvas Override | All three (Canvas Override, Reset, Edit template) |
+| Site Builder | Edit Canvas default template | Edit template only |
+| Content Lead | Use Canvas Override (global) | Canvas Override + Reset |
+| Article Editor | Use Canvas Override for Article | Canvas Override + Reset (on articles only) |
+| Reset Manager | Reset Canvas layout | Reset only |
+| Authenticated User | (none) | None |
+| Anonymous User | (none) | None |
 
 ### Example: Multi-Team Setup
 

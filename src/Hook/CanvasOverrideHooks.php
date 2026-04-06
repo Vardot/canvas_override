@@ -463,9 +463,17 @@ class CanvasOverrideHooks {
   /**
    * Implements hook_menu_local_tasks_alter().
    *
-   * Hides the "Edit template" tab when canvas_override is enabled for a content
-   * type. Nodes with canvas_override use per-node Canvas layouts and should
-   * only show "Canvas Override" and "Reset to default layout" options.
+   * Controls visibility of all three Canvas Override local task tabs based on
+   * the current user's permissions. Only applies to content types that have
+   * Canvas Override enabled.
+   *
+   * - Canvas Override tab: requires 'administer canvas override',
+   *   'use canvas override', or 'use canvas override for {bundle}'.
+   * - Reset Canvas layout tab: requires 'administer canvas override',
+   *   'reset canvas layout', 'reset canvas layout for {bundle}',
+   *   'use canvas override', or 'use canvas override for {bundle}'.
+   * - Edit template tab: requires 'edit canvas default template' or
+   *   'administer canvas override'.
    */
   #[Hook('menu_local_tasks_alter', order: new OrderAfter(modules: ['drupal_cms_helper']))]
   public function menuLocalTasksAlter(array &$data, string $route_name): void {
@@ -487,10 +495,35 @@ class CanvasOverrideHooks {
       return;
     }
 
-    // Hide the "Edit template" tab for canvas_override enabled content types.
-    // The tab is added by drupal_cms_helper with ID 'entity.node.template'.
+    $account = \Drupal::currentUser();
+    $bundle = $node->bundle();
+    $is_admin = $account->hasPermission('administer canvas override');
+    $can_use = $account->hasPermission('use canvas override')
+      || $account->hasPermission("use canvas override for $bundle");
+
+    // Canvas Override tab: hide if the user cannot use canvas override.
+    if (isset($data['tabs'][0]['canvas_override.node.canvas'])) {
+      if (!$is_admin && !$can_use) {
+        unset($data['tabs'][0]['canvas_override.node.canvas']);
+      }
+    }
+
+    // Reset Canvas layout tab: hide if the user cannot reset layouts.
+    if (isset($data['tabs'][0]['canvas_override.node.canvas.reset'])) {
+      $can_reset = $account->hasPermission('reset canvas layout')
+        || $account->hasPermission("reset canvas layout for $bundle");
+      if (!$is_admin && !$can_use && !$can_reset) {
+        unset($data['tabs'][0]['canvas_override.node.canvas.reset']);
+      }
+    }
+
+    // Edit template tab: hide if the user cannot edit the shared template.
     if (isset($data['tabs'][0]['entity.node.template'])) {
-      unset($data['tabs'][0]['entity.node.template']);
+      $can_edit_template = $account->hasPermission('edit canvas default template')
+        || $account->hasPermission("edit canvas default template for $bundle");
+      if (!$is_admin && !$can_edit_template) {
+        unset($data['tabs'][0]['entity.node.template']);
+      }
     }
   }
 

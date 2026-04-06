@@ -7,5 +7,14 @@ use canvas override:
   title: 'Use Canvas Override for all content types'
   description: 'Edit per-content Canvas layouts on any Canvas Override-enabled content type.'
 
+edit canvas default template:
+  title: 'Edit Canvas default template'
+  description: 'Access the Edit template tab to edit the shared ContentTemplate default layout for Canvas Override-enabled content types.'
+  restrict access: true
+
+reset canvas layout:
+  title: 'Reset Canvas layout to default'
+  description: 'Access the Reset to default layout tab to clear a per-content Canvas layout and revert to the shared ContentTemplate default.'
+
 permission_callbacks:
   - Drupal\canvas_override\CanvasOverridePermissions::perBundlePermissions

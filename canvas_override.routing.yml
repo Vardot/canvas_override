@@ -18,7 +18,7 @@ canvas_override.node.canvas.reset:
     _controller: '\Drupal\canvas_override\Controller\CanvasResetController::reset'
     _title: 'Reset Canvas layout'
   requirements:
-    _canvas_override_access: 'TRUE'
+    _canvas_reset_access: 'TRUE'
     node: '\d+'
   options:
     parameters:

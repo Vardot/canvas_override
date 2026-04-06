@@ -5,7 +5,7 @@ canvas_override.node.canvas:
   weight: 50
 
 canvas_override.node.canvas.reset:
-  title: 'Reset to default layout'
+  title: 'Reset Canvas layout'
   route_name: canvas_override.node.canvas.reset
   base_route: entity.node.canonical
   weight: 51

@@ -36,8 +36,19 @@ final class CanvasOverridePermissions {
       $label = $node_type->label();
 
       $permissions["use canvas override for $bundle"] = [
-        'title' => $this->t('Use Canvas Override for %type content', ['%type' => $label]),
-        'description' => $this->t('Edit per-content Canvas layouts on %type content.', ['%type' => $label]),
+        'title' => $this->t('%type_name: Use Canvas Override', ['%type_name' => $label]),
+        'description' => $this->t('Edit per-content Canvas layouts on %type_name content.', ['%type_name' => $label]),
+      ];
+
+      $permissions["reset canvas layout for $bundle"] = [
+        'title' => $this->t('%type_name: Reset Canvas layout', ['%type_name' => $label]),
+        'description' => $this->t('Reset per-content Canvas layouts to the shared default on %type_name content.', ['%type_name' => $label]),
+      ];
+
+      $permissions["edit canvas default template for $bundle"] = [
+        'title' => $this->t('%type_name: Edit Canvas default template', ['%type_name' => $label]),
+        'description' => $this->t('Edit the shared Canvas default template for %type_name content.', ['%type_name' => $label]),
+        'restrict access' => TRUE,
       ];
     }
 
