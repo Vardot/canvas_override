@@ -1,4 +1,5 @@
 automator
+pymdownx
 topbar
 canvas
 customisation
