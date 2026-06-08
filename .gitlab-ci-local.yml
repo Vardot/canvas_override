@@ -1,0 +1,76 @@
+# Slim pipeline for `gitlab-ci-local` (https://github.com/firecow/gitlab-ci-local).
+#
+# The real .gitlab-ci.yml `include:`s the drupalci templates and runs the
+# webship-js browser jobs inside the drupalci PHP-Apache image with a MySQL
+# service - none of which gitlab-ci-local can reproduce ($_GITLAB_TEMPLATES_REPO
+# is not a public path, and the browser jobs need the composer-built site
+# artifact). This file mirrors the jobs that ARE reproducible locally:
+#   - validate-stage linters on Node 20 (webship-js >=2.0 declares engines.node ">=20")
+#   - a webship-js step-wiring dry-run (no browser, no live site)
+#   - the GitLab Pages MkDocs build
+#
+# Usage:
+#   gitlab-ci-local --file .gitlab-ci-local.yml             # all jobs
+#   gitlab-ci-local --file .gitlab-ci-local.yml eslint      # one job
+#   gitlab-ci-local --file .gitlab-ci-local.yml pages       # just the docs build
+#   gitlab-ci-local --file .gitlab-ci-local.yml webship-dry-run
+
+stages:
+  - validate
+  - test
+  - pages
+
+variables:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+
+cspell:
+  stage: validate
+  image: node:20
+  before_script:
+    - npm install -g cspell
+  script:
+    - cspell "**/*.{php,module,inc,install,test,profile,theme,js,css,md,yml,txt}" --no-progress || true
+  allow_failure: true
+
+eslint:
+  stage: validate
+  image: node:20
+  before_script:
+    - corepack enable
+    - yarn install
+  script:
+    - node --version
+    - yarn lint:js || true
+    - yarn lint:yaml || true
+  allow_failure: true
+
+# Validate every Gherkin step resolves to a definition without launching a
+# browser or needing a live Drupal site. `--dry-run` skips execution; the
+# WEBSHIP_REPORT_DISABLE flag stops webship-js's auto HTML/PDF report hook
+# (which would look for the default report path and exit non-zero).
+webship-js-dry-run:
+  stage: test
+  image: node:20
+  before_script:
+    - corepack enable
+    - cp cucumber.js .cucumber.js.bak
+    - yarn install
+    - cp .cucumber.js.bak cucumber.js && rm .cucumber.js.bak
+  script:
+    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --dry-run
+    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.drupalcms.js --dry-run
+
+# Mirrors the real `pages` job in .gitlab-ci.yml so the MkDocs build can be
+# verified locally before pushing. The drupalci pipeline schedules pages in
+# the `.post` stage (it has no `deploy` stage); gitlab-ci-local does not
+# expose `.post`, so we run it in our own `pages` stage instead.
+pages:
+  stage: pages
+  image: python:3.12-slim
+  before_script:
+    - pip install --quiet mkdocs-material pymdown-extensions
+  script:
+    - mkdocs build --strict --site-dir public
+  artifacts:
+    paths:
+      - public

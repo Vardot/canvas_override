@@ -47,6 +47,12 @@ nav:
       - Architecture: "3-developers/0-architecture.md"
       - Services and Extension Points: "3-developers/1-hooks-and-services.md"
       - API Reference: "3-developers/2-api-reference.md"
+  - Testing:
+      - Overview: "4-testing/0-overview.md"
+      - Automated Functional Acceptance Testing: "4-testing/1-automated-functional-acceptance-testing.md"
+      - Running the Suite: "4-testing/2-running-tests.md"
+      - GitLab CI and Local Runner: "4-testing/3-gitlab-ci.md"
+      - PHPUnit Coverage: "4-testing/4-phpunit.md"
   - Frequently Asked Questions: "faq.md"
 
 plugins:

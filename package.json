@@ -1,6 +1,6 @@
 {
   "name": "canvas_override",
-  "description": "Lets site builders enable per-node Canvas-based layout editing on the full content view mode for selected content types.",
+  "description": "Lets site builders enable per-content Canvas-based layout editing on the full content view mode for selected content types.",
   "license": "GPL-2.0-or-later",
   "private": true,
   "engines": {
@@ -11,7 +11,9 @@
     "Drupal",
     "Varbase",
     "Canvas",
-    "Layout"
+    "Layout",
+    "webship-js",
+    "acceptance-testing"
   ],
   "author": "Vardot",
   "scripts": {
@@ -19,7 +21,14 @@
     "phpcbf": "phpcbf --standard=./.phpcs.xml .",
     "lint:js": "node ./node_modules/eslint/bin/eslint.js .",
     "lint:yaml": "node ./node_modules/eslint/bin/eslint.js --ext .yml .",
-    "spellcheck": "cspell lint ."
+    "spellcheck": "cspell lint .",
+    "test": "cucumber-js --config cucumber.js",
+    "test:drupal": "cucumber-js --config cucumber.js",
+    "test:drupalcms": "cucumber-js --config cucumber.drupalcms.js",
+    "test:chromium": "BROWSER=chromium cucumber-js --config cucumber.js",
+    "test:firefox": "BROWSER=firefox cucumber-js --config cucumber.js",
+    "test:webkit": "BROWSER=webkit cucumber-js --config cucumber.js",
+    "generate-reports": "generate-reports"
   },
   "devDependencies": {
     "cspell": "^8.16.1",
@@ -42,7 +51,8 @@
     "terser-webpack-plugin": "^5.3.14",
     "underscore": "~1.13.7",
     "webpack": "^5.99.8",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^6.0.1",
+    "webship-js": "~2"
   },
   "browserslist": [
     "last 2 Chrome major versions",
@@ -55,5 +65,9 @@
     "last 1 Samsung version",
     "Firefox ESR"
   ],
-  "packageManager": "yarn@4.9.3"
+  "packageManager": "yarn@4.9.3",
+  "_resolutions_note": "webship-js floats @cucumber/cucumber '*' which resolves to v13 (needs Node 22); the resolution below pins the transitive cucumber to the 12.x line so the suite runs on Node 20.",
+  "resolutions": {
+    "@cucumber/cucumber": "12.9.0"
+  }
 }

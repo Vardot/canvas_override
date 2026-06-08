@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - canvas_override
+id: canvas_reset
+label: 'Canvas reset (test)'
+weight: 10
+is_admin: false
+permissions:
+  - 'access content'
+  - 'reset canvas layout'

@@ -1,7 +1,7 @@
 {
     "patches": {
         "drupal/canvas": {
-            "feat: #3567225 Support per-entity Canvas layouts with field linking and template copying": "https://raw.githubusercontent.com/vardot/varbase-patches/refs/heads/patches/canvas--2026-04-02--3567225.patch"
+            "Issue #3567225: Un-final ComponentTreeLoader so Canvas Override can extend it (PHP-only subset of the per-entity Canvas layout patch; the full patch's front-end hunks do not apply to released drupal/canvas and break CI's all-or-nothing git apply)": "https://git.drupalcode.org/issue/canvas_override-3594223/-/raw/3594223-add-automated-functional/.gitlab-ci/canvas--3567225--php-only.patch"
         }
     }
 }

@@ -12,7 +12,9 @@
     "yarn.lock",
     ".yarnrc.yml",
     ".yarn/*",
-    ".cspell-project-words.txt"
+    ".cspell-project-words.txt",
+    "tests/fixtures/**/config/*.yml",
+    "tests/selectors/*.json"
   ],
   "ignoreRegExpList": [
     "^msgstr .*",

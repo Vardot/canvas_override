@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.marketing_campaign
+  module:
+    - canvas_override
+    - node
+id: canvas_global
+label: 'Canvas global (test)'
+weight: 10
+is_admin: false
+permissions:
+  - 'access content'
+  - 'create marketing_campaign content'
+  - 'edit any marketing_campaign content'
+  - 'use canvas override'

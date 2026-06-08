@@ -1,10 +1,31 @@
-# Local GitLab CI runner files
+# Local GitLab CI runner working files
 .gitlab-ci-local/
-.gitlab-ci-local.yml
 .gitlab-ci-local-variables.yml
+
+# Playwright MCP scratch output (local exploratory runs)
+.playwright-mcp/
 
 # Ignore node modules
 node_modules
 /*/node_modules
 .yarn/
 .yarn/install-state.gz
+
+# webship-js generated test artefacts (keep the tracked README placeholders)
+tests/reports/**/*.json
+tests/reports/**/*.html
+tests/reports/**/*.pdf
+tests/reports/**/*.xml
+tests/screenshots/**/*.png
+tests/screenshots/**/*.jpg
+tests/screenshots/**/*.html
+tests/videos/**/*.webm
+tests/videos/**/*.mp4
+.eslintcache
+.cucumber.js.bak
+
+# Claude Code local scratch
+.claude/
+
+# MkDocs build output (gitlab-ci-local pages job)
+public/

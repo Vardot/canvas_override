@@ -1,0 +1,35 @@
+name: 'Canvas Override - Marketing campaign test base (Canvas Override activated)'
+description: >
+  Creates a custom "Marketing campaign" content type with image, body and tags
+  fields and a nice, non-empty default full-content display, then turns on
+  Canvas Override so the marketing team gets a Drupal Canvas full-content layout
+  they can override per campaign. Used by the automated functional acceptance
+  test suite and a ready starting point for the marketing-team use case.
+
+  Works on both Drupal core (Standard) and Drupal CMS: field storages the
+  profile already ships are kept, and the ones it does not are created. Canvas
+  Override is enabled through a config action *after* the bundle and its fields
+  exist, so canvas_override's field/display setup runs cleanly (enabling it
+  inside the content-type config would fire the hook mid-import).
+type: 'Content type'
+install:
+  - node
+  - field
+  - text
+  - image
+  - taxonomy
+  - canvas
+  - canvas_override
+config:
+  import:
+    image:
+      - image.style.large
+  actions:
+    # The bundle + fields are created from this recipe's config/ directory
+    # first; this action then enables Canvas Override, which adds the
+    # field_canvas_layout field and the canvas render component to the display.
+    node.type.marketing_campaign:
+      setThirdPartySetting:
+        module: canvas_override
+        key: enabled
+        value: true

@@ -67,6 +67,28 @@ Canvas Override provides three permission levels:
 
 For more details, see the [documentation](docs/index.md).
 
+## Testing
+
+Canvas Override ships two layers of automated tests:
+
+- **Automated functional acceptance testing** with
+  [webship-js](https://www.npmjs.com/package/webship-js) (Playwright +
+  Cucumber-js) under `tests/features/`, split into a Drupal Standard suite and
+  a Drupal CMS suite. It drives a real browser to verify the content type form,
+  the Canvas tabs, the per-content editor redirect, the reset action, tab
+  access control, permission registration and accessibility.
+- **PHPUnit** kernel / functional-javascript / unit coverage under `tests/src/`.
+
+```bash
+corepack enable && yarn install
+yarn playwright install --with-deps chromium
+LAUNCH_URL="https://your-site.ddev.site" yarn test            # Drupal Standard
+LAUNCH_URL="https://your-site.ddev.site" yarn test:drupalcms  # Drupal CMS
+```
+
+See the [Testing documentation](docs/4-testing/0-overview.md) for setup, the
+GitLab CI pipeline and the `gitlab-ci-local` runner.
+
 ## Maintainer
 
 [Vardot](https://www.drupal.org/vardot)

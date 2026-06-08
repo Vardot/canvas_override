@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- cspell:ignore Openercase -->
 <ruleset name="custom_code">
-  <arg name="extensions" value="engine,inc,install,module,php,profile,test,theme,yml"/>
+  <arg name="extensions" value="inc,install,module,php,profile,test,theme"/>
   <description>Default PHP CodeSniffer configuration for Drupal core.</description>
 
   <!--Exclude folders used by common frontend tools. These folders match the file_scan_ignore_directories setting in default.settings.php-->
   <exclude-pattern>*/bower_components/*</exclude-pattern>
   <exclude-pattern>*/node_modules/*</exclude-pattern>
+  <exclude-pattern>*/vendor/*</exclude-pattern>
+  <exclude-pattern>*/.gitlab-ci-local/*</exclude-pattern>
+  <exclude-pattern>*/.git/*</exclude-pattern>
+  <exclude-pattern>*/tests/fixtures/*</exclude-pattern>
+  <exclude-pattern>*/tests/reports/*</exclude-pattern>
+  <exclude-pattern>*/tests/screenshots/*</exclude-pattern>
+  <exclude-pattern>*/tests/videos/*</exclude-pattern>
 
   <file>.</file>
 

@@ -6,7 +6,7 @@
 ### Proposed resolution
 
 
-### Remaining tasks
+### Checkpoints
 - [x] File an issue about this project
 - [ ] Addition/Change/Update/Fix to this project
 - [ ] Testing to ensure no regression

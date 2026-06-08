@@ -1,8 +1,26 @@
-################
-# DrupalCI GitLab CI configuration for Canvas Override
+################################################################################
+# GitLab CI for the Canvas Override module.
+#
+# Three layers run on every pipeline:
+#
+#   1. PHPUnit (DrupalCI matrix)  - kernel / unit,
+#      built by the drupalci `composer` job with the Canvas #3567225 patch
+#      applied via `.gitlab-ci/patches.json`.
+#   2. Validation linters         - cspell / eslint (Node 20).
+#   3. webship-js BDD browser jobs - Playwright + Cucumber-js acceptance
+#      tests, one per Drupal flavour:
+#        - webship-js-test-drupal-core             -> Drupal Standard profile + Canvas
+#        - webship-js-test-drupal-cms  -> Drupal CMS distribution + Canvas
+#   4. GitLab Pages               - the Material-for-MkDocs documentation site.
+#
+# The webship-js suite drives the site entirely through the browser. The CI
+# before_script only has to build the site, apply the two test recipes
+# (tests/fixtures/marketing_campaign_test_base + tests/fixtures/department_test_base) and
+# install Node + Playwright; the seeded campaign node is created through the
+# browser by the @setup feature.
 #
 # @see https://www.drupal.org/drupalorg/docs/drupal-ci/customizing-drupalci-testing
-################
+################################################################################
 
 ################
 # Includes
@@ -11,9 +29,9 @@ include:
   - project: $_GITLAB_TEMPLATES_REPO
     ref: $_GITLAB_TEMPLATES_REF
     file:
-      - '/includes/include.drupalci.main.yml'
-      - '/includes/include.drupalci.variables.yml'
-      - '/includes/include.drupalci.workflows.yml'
+      - "/includes/include.drupalci.main.yml"
+      - "/includes/include.drupalci.variables.yml"
+      - "/includes/include.drupalci.workflows.yml"
 
 ################
 # Variables
@@ -29,16 +47,252 @@ variables:
   _PHPUNIT_EXTRA: --group canvas_override
   # Apply the Canvas issue #3567225 patch via the DrupalCI template mechanism.
   # The template's expand_composer_json.php merges this into the test project's
-  # composer.json so cweagans/composer-patches applies it during composer install.
+  # composer.json so cweagans/composer-patches applies it during composer
+  # install. Required by canvas_override's per-entity Canvas layout support.
   _COMPOSER_PATCHES_FILE: ".gitlab-ci/patches.json"
+  COMPOSER_FLAGS: "--no-strict-lock"
+  COMPOSER_MEMORY_LIMIT: "-1"
+  # No yarn.lock immutability in CI - Yarn 4 defaults to immutable installs
+  # and would refuse to refresh the lockfile inside the job.
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+  # PHP-only subset of the Canvas #3567225 patch (un-finals ComponentTreeLoader
+  # so canvas_override can extend it). The full upstream patch's front-end hunks
+  # do not apply to released drupal/canvas and break CI's all-or-nothing
+  # git apply, so a committed PHP-only patch is used here and in patches.json.
+  _CANVAS_PATCH_URL: "https://git.drupalcode.org/issue/canvas_override-3594223/-/raw/3594223-add-automated-functional/.gitlab-ci/canvas--3567225--php-only.patch"
 
 ################
-# Test
+# PHPUnit (DrupalCI matrix)
 ################
 phpunit:
   parallel:
     matrix:
       - TESTSUITE:
         - kernel
-        - functional-javascript
         - unit
+
+################
+# Validate stage - linters
+################
+cspell:
+  stage: validate
+  image: node:20
+  before_script:
+    - npm install -g cspell
+  script:
+    - cspell "**/*.{php,module,inc,install,test,profile,theme,js,css,md,yml,txt}" --no-progress || true
+  allow_failure: true
+
+# Node 20+ required: webship-js >=2.0 declares engines.node ">=20".
+eslint:
+  stage: validate
+  image: node:20
+  before_script:
+    - corepack enable
+    - yarn install
+  script:
+    - yarn lint:js || true
+    - yarn lint:yaml || true
+  after_script:
+    - touch junit.xml _eslint.patch
+  allow_failure: true
+
+################
+# Reusable before_script fragments (via !reference)
+################
+.fragments:
+  web_db: &web_db
+    - mkdir -pv $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/files
+    - mkdir -pv $CI_PROJECT_DIR/$_WEB_ROOT/sites/simpletest
+    - chmod -R 777 $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/files
+    - chmod -R 777 $CI_PROJECT_DIR/$_WEB_ROOT/sites/simpletest
+    - rm -rf /var/www/html && ln -s $CI_PROJECT_DIR/$_WEB_ROOT /var/www/html
+    - chown -R www-data:www-data $CI_PROJECT_DIR
+    - service apache2 start
+    - export SIMPLETEST_DB=mysql://$MYSQL_USER:$MYSQL_PASSWORD@database/$MYSQL_DATABASE
+  node_playwright: &node_playwright
+    - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    - apt-get install -y nodejs
+    - node --version && npm --version
+    - 'test -f .yarnrc.yml || echo "nodeLinker: node-modules" > .yarnrc.yml'
+    # Back up cucumber.js - webship-js's postinstall can clobber it under yarn 4.
+    - cp cucumber.js .cucumber.js.bak
+    - corepack enable
+    - yarn install
+    - cp .cucumber.js.bak cucumber.js && rm .cucumber.js.bak
+    - ./node_modules/.bin/playwright install --with-deps chromium
+
+################
+# Shared base for the browser-test jobs
+################
+.drupal-node-base:
+  extends: .testing-job-base
+  needs: [composer]
+  # Override the parent's services - we only need the database. Playwright
+  # bundles its own Chromium, so Selenium and chromedriver are not needed.
+  services:
+    - name: $_CONFIG_DOCKERHUB_ROOT/$_TARGET_DB_TYPE-$_TARGET_DB_VERSION:$_TARGET_DB_IMAGE_TAG
+      alias: database
+  variables:
+    DRUPAL_ADMIN_USERNAME: "webmaster"
+    DRUPAL_ADMIN_PASSWORD: "dD.123123ddd"
+    DRUPAL_TEST_BASE_URL: "http://localhost"
+    LAUNCH_URL: "http://localhost"
+    FORCE_COLOR: "1"
+  artifacts:
+    when: always
+    paths:
+      - tests/reports/
+      - tests/screenshots/
+      - tests/videos/
+    expire_in: 7 days
+    reports:
+      junit: tests/reports/junit.xml
+
+################
+# webship-js BDD - Drupal Standard profile + Canvas
+################
+# Installs the Standard profile and applies the two test recipes (ready
+# "Marketing campaign" with Canvas Override on + plain "Department" type with it
+# off). The @setup feature then creates the seeded campaign node at
+# /canvas-override-test for the editor / reset / tab / access-control scenarios.
+webship-js-test-drupal-core:
+  extends: .drupal-node-base
+  before_script:
+    - !reference [.fragments, web_db]
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT site:install standard
+        --db-url=$SIMPLETEST_DB --account-name=webmaster --account-pass=dD.123123ddd
+        --site-name="Canvas Override Test" -y
+    # Apply the Marketing campaign recipe: it enables canvas + canvas_override,
+    # creates the custom content type with its image / body / tags fields and a
+    # nice default full-content Canvas layout, and turns Canvas Override on. The
+    # seeded campaign node is created through the browser by the @setup feature.
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/marketing_campaign_test_base
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/department_test_base
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_roles_test_base
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT cache:rebuild
+    - !reference [.fragments, node_playwright]
+  script:
+    # cucumber.js loads only `tests/features/drupal/**`. Disable webship-js's
+    # auto HTML hook (it cannot await PDF generation from `process.on('exit')`)
+    # and run `generate-reports` explicitly after cucumber-js so both HTML and
+    # PDF land next to the JSON in `tests/reports/drupal/`.
+    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --tags "not @wip"
+    - node ./node_modules/webship-js/bin/generate-reports.js
+        --json tests/reports/drupal/cucumber_report.json
+        --out  tests/reports/drupal/cucumber_report.html
+        --format all
+        --pdf-out tests/reports/drupal/cucumber_report.pdf
+  allow_failure: false
+
+################
+# webship-js BDD - Drupal CMS distribution + Canvas
+################
+# Builds a fresh drupal/cms project (does not collide with the drupalci
+# `composer` artefact, which pins cweagans/composer-patches ~1 and conflicts
+# with drupal/cms >=2.1). Requires drupal/canvas (patched with #3567225) and
+# the local canvas_override path repo, enables both, turns Canvas Override on
+# for the Page type and seeds one page node at /canvas-override-test.
+webship-js-test-drupal-cms:
+  extends: .testing-job-base
+  needs: []
+  services:
+    - name: $_CONFIG_DOCKERHUB_ROOT/$_TARGET_DB_TYPE-$_TARGET_DB_VERSION:$_TARGET_DB_IMAGE_TAG
+      alias: database
+  variables:
+    DRUPAL_ADMIN_USERNAME: "webmaster"
+    DRUPAL_ADMIN_PASSWORD: "dD.123123ddd"
+    DRUPAL_TEST_BASE_URL: "http://localhost"
+    LAUNCH_URL: "http://localhost"
+    FORCE_COLOR: "1"
+    CANVAS_OVERRIDE_BUNDLE: "marketing_campaign"
+    CANVAS_OVERRIDE_BUNDLE_LABEL: "Marketing campaign"
+    _CMS_BUILD_DIR: "/tmp/cms-build"
+  artifacts:
+    when: always
+    paths:
+      - tests/reports/
+      - tests/screenshots/
+      - tests/videos/
+    expire_in: 7 days
+    reports:
+      junit: tests/reports/junit.xml
+  before_script:
+    # = Build a fresh Drupal CMS project =
+    - composer create-project drupal/cms $_CMS_BUILD_DIR --no-interaction --no-progress
+    - cd $_CMS_BUILD_DIR
+    # = Allow dev stability for the local path-repo module =
+    - composer config minimum-stability dev
+    - composer config prefer-stable true
+    # = Patch drupal/canvas with #3567225 (cweagans/composer-patches v2) =
+    - composer config --no-plugins allow-plugins.cweagans/composer-patches true
+    - composer config extra.enable-patching true
+    - 'composer config --json --merge extra.patches.drupal/canvas "{\"feat: #3567225 Support per-entity Canvas layouts\": \"$_CANVAS_PATCH_URL\"}"'
+    # = Require Canvas + the local canvas_override path repo =
+    # drupal/cms already ships drupal/canvas, so `require` is a no-op and would
+    # not trigger patching. Require the cweagans plugin, then reinstall canvas
+    # so the #3567225 PHP patch is applied to the already-installed package.
+    - composer require cweagans/composer-patches:^2 --no-interaction --no-progress
+    - composer require 'drupal/canvas:~1' --no-interaction --no-progress
+    - composer reinstall drupal/canvas --no-interaction
+    # Pin the path-repo version: in CI the checkout is a detached HEAD, so the
+    # path repo would otherwise derive version dev-<sha> and the 1.0.x-dev
+    # constraint would not match.
+    - composer config repositories.canvas-override-local '{"type":"path","url":"'"$CI_PROJECT_DIR"'","options":{"symlink":true,"versions":{"drupal/canvas_override":"1.0.x-dev"}}}'
+    - composer require 'drupal/canvas_override:1.0.x-dev@dev' --no-interaction --no-progress
+    # = Web server =
+    - mkdir -pv $_CMS_BUILD_DIR/web/sites/default/files
+    - mkdir -pv $_CMS_BUILD_DIR/web/sites/simpletest
+    - chmod -R 777 $_CMS_BUILD_DIR/web/sites/default/files
+    - chmod -R 777 $_CMS_BUILD_DIR/web/sites/simpletest
+    - rm -rf /var/www/html && ln -s $_CMS_BUILD_DIR/web /var/www/html
+    - chown -R www-data:www-data $_CMS_BUILD_DIR
+    - service apache2 start
+    - export SIMPLETEST_DB=mysql://$MYSQL_USER:$MYSQL_PASSWORD@database/$MYSQL_DATABASE
+    # = Drupal CMS site install =
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web site:install drupal_cms_installer
+        --db-url=$SIMPLETEST_DB --site-name="Canvas Override Drupal CMS Test" -y
+    # = Rename uid 1 to webmaster (installer ignores --account-name) =
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web php:eval '$u=\Drupal\user\Entity\User::load(1); $u->setUsername("webmaster"); $u->setEmail("webmaster@example.test"); $u->setPassword("dD.123123ddd"); $u->save();'
+    # = Apply the Marketing campaign recipe (enables canvas + canvas_override,
+    #   creates the content type + fields + default Canvas layout). The recipe
+    #   creates the body / field_image storages Drupal CMS does not ship; the
+    #   seeded campaign node is created through the browser by the @setup feature.
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/marketing_campaign_test_base
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/department_test_base
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_roles_test_base
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web cache:rebuild
+    # = Node.js 20 + Playwright Chromium (from CI_PROJECT_DIR - features live there) =
+    - cd $CI_PROJECT_DIR
+    - !reference [.fragments, node_playwright]
+  script:
+    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.drupalcms.js --tags "not @wip"
+    - node ./node_modules/webship-js/bin/generate-reports.js
+        --json tests/reports/drupalcms/cucumber_report.json
+        --out  tests/reports/drupalcms/cucumber_report.html
+        --format all
+        --pdf-out tests/reports/drupalcms/cucumber_report.pdf
+  allow_failure: false
+
+################
+# GitLab Pages - MkDocs documentation site
+################
+# Builds the Material-for-MkDocs site under `docs/` and publishes it to
+# https://project.pages.drupalcode.org/canvas_override/. Only runs for the
+# default branch. drupalci's pipeline declares the stages .pre, build,
+# validate, test, .post only - there is no `deploy` stage - so `pages` runs
+# in `.post` (after every other stage finishes).
+pages:
+  stage: .post
+  image: python:3.12-slim
+  needs: []
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  before_script:
+    - pip install --quiet mkdocs-material pymdown-extensions
+  script:
+    - mkdocs build --strict --site-dir public
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days

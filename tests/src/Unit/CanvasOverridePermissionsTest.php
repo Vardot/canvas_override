@@ -243,6 +243,41 @@ class CanvasOverridePermissionsTest extends UnitTestCase {
   }
 
   /**
+   * Tests per-bundle permissions for a custom "Marketing campaign" type.
+   *
+   * Mirrors the acceptance-test fixture: a site builder enables Canvas Override
+   * on their own content type (machine name marketing_campaign) so the
+   * marketing team can override the full-content Canvas layout per campaign.
+   * The generator must mint the three per-bundle permissions for it and carry
+   * the human-readable label into the titles.
+   *
+   * @covers ::perBundlePermissions
+   */
+  public function testMarketingCampaignCustomType(): void {
+    $this->nodeTypeStorage->method('loadMultiple')
+      ->with(NULL)
+      ->willReturn([
+        'marketing_campaign' => $this->createMockNodeType('marketing_campaign', 'Marketing campaign', TRUE),
+        'page' => $this->createMockNodeType('page', 'Basic page', FALSE),
+      ]);
+
+    $result = $this->permissions->perBundlePermissions();
+
+    // Only the enabled custom type generates permissions (3 of them).
+    $this->assertCount(3, $result);
+    $this->assertArrayHasKey('use canvas override for marketing_campaign', $result);
+    $this->assertArrayHasKey('reset canvas layout for marketing_campaign', $result);
+    $this->assertArrayHasKey('edit canvas default template for marketing_campaign', $result);
+    $this->assertArrayNotHasKey('use canvas override for page', $result);
+
+    // The bundle label is carried into the generated permission titles.
+    $this->assertStringContainsString(
+      'Marketing campaign',
+      (string) $result['use canvas override for marketing_campaign']['title'],
+    );
+  }
+
+  /**
    * Tests that the class can be instantiated.
    */
   public function testClassInstantiation(): void {

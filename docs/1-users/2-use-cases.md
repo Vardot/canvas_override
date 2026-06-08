@@ -8,6 +8,33 @@ Canvas Override is most useful when certain pages need unique layouts while
 most content follows a standard template. Below are common scenarios where
 per-content layouts solve real problems.
 
+## Marketing Campaigns (worked example)
+
+**Scenario**: The marketing team owns a **Marketing campaign** content type.
+Every campaign should share one on-brand page design, but the team also needs
+to make selected campaigns stand out — adding an announcement bar at the top, a
+sign-up **webform** in the body, or extra promo sections at the bottom — without
+a developer and without touching the other campaigns.
+
+**How Canvas Override helps**:
+
+1. A site builder creates the **Marketing campaign** content type and enables
+   Canvas Override on it (Structure → Content types → Marketing campaign →
+   **Canvas layout** → *Enable per-content Canvas layout editing on the full
+   content view mode*).
+2. The team designs the shared default once in the **Edit template** tab — this
+   is the Drupal Canvas full-content layout every campaign inherits.
+3. For an ordinary campaign, editors just fill in the fields; it renders with
+   the shared layout automatically.
+4. For a campaign that needs more, the editor opens the **Canvas** tab on that
+   campaign and composes a per-campaign layout — dropping in a hero, a webform
+   component, or extra sections at the top or bottom.
+5. When the promotion ends, the editor uses **Reset Canvas layout** to drop the
+   override and fall back to the shared default.
+
+**Benefit**: Marketers self-serve standout campaign pages on top of a governed,
+on-brand default — and revert with one click when a campaign is over.
+
 ## Landing Pages
 
 **Scenario**: Your marketing team needs campaign-specific landing pages with

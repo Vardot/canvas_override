@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Department'
+type: department
+description: 'A marketing landing page used to test enabling Canvas Override through the content type form.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true

@@ -1,15 +1,18 @@
-### Remaining tasks
-- [x] File an issue about this project
-- [x] Addition/Change/Update/Fix to this project
+### Checkpoints:
+- [x] File an issue
+- [x] Addition/Change/Update/Fix
 - [ ] Testing to ensure no regression
-- [ ] Automated unit/functional testing coverage
-- [ ] Developer Documentation support on feature change/addition
-- [ ] User Guide Documentation support on feature change/addition
+- [ ] Automated unit testing coverage
+- [ ] Automated functional testing coverage
 - [ ] UX/UI designer responsibilities
-- [ ] Accessibility and Readability
-- [ ] Code review from 1 Varbase core team member
+- [ ] Readability
+- [ ] Accessibility
+- [ ] Performance
+- [ ] Security
+- [ ] Documentation
+- [ ] Code review by maintainers
 - [ ] Full testing and approval
 - [ ] Credit contributors
 - [ ] Review with the product owner
-- [ ] Update Release Notes
+- [ ] Release notes snippet
 - [ ] Release

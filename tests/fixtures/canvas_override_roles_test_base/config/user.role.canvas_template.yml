@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - canvas_override
+id: canvas_template
+label: 'Canvas template (test)'
+weight: 10
+is_admin: false
+permissions:
+  - 'access content'
+  - 'edit canvas default template'

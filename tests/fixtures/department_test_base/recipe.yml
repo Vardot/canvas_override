@@ -1,0 +1,16 @@
+name: 'Canvas Override - Department (Canvas Override not activated)'
+description: >
+  Creates a plain "Department" content type with a body field and a default
+  full-content display, with Canvas Override NOT activated. The acceptance test
+  suite uses it to exercise turning Canvas Override on through the content type
+  form (and asserting the Canvas Layout field is created). Pair it with the
+  "marketing_campaign_test_base" recipe, which ships the ready, already-activated type.
+
+  Works on both Drupal core (Standard) and Drupal CMS: the shared body field
+  storage is kept when the profile already ships it and created when it does
+  not.
+type: 'Content type'
+install:
+  - node
+  - field
+  - text

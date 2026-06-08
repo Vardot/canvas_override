@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_canvas_layout
+    - node.type.marketing_campaign
+  module:
+    - canvas
+id: node.marketing_campaign.field_canvas_layout
+field_name: field_canvas_layout
+entity_type: node
+bundle: marketing_campaign
+label: 'Canvas Layout'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: component_tree

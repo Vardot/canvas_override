@@ -1,0 +1,18 @@
+name: 'Canvas Override - per-tier test roles'
+description: >
+  Creates one role per Canvas Override permission tier so the acceptance suite
+  can assert the full access matrix (who sees the Canvas tab, the Reset tab, the
+  Edit template tab, the operation link, and who is denied the routes):
+    - canvas_admin    : administer canvas override
+    - canvas_global   : use canvas override (all bundles)
+    - canvas_bundle   : use canvas override for marketing_campaign (per-bundle)
+    - canvas_reset    : reset canvas layout
+    - canvas_template : edit canvas default template
+  Apply AFTER the marketing_campaign_test_base recipe: the per-bundle permission
+  only exists once Canvas Override is enabled on the marketing_campaign type.
+  Works on both Drupal core (Standard) and Drupal CMS.
+type: 'Site'
+install:
+  - node
+  - canvas
+  - canvas_override

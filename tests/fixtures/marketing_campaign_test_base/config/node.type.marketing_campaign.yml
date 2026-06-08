@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Marketing campaign'
+type: marketing_campaign
+description: 'Campaign landing content the marketing team composes with Drupal Canvas.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true
