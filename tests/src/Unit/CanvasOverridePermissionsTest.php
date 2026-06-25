@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\canvas_override\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\canvas_override\CanvasOverridePermissions;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -17,6 +18,7 @@ use Drupal\Tests\UnitTestCase;
  * @coversDefaultClass \Drupal\canvas_override\CanvasOverridePermissions
  * @group canvas_override
  */
+#[Group('canvas_override')]
 class CanvasOverridePermissionsTest extends UnitTestCase {
 
   /**
