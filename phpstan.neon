@@ -7,6 +7,11 @@ parameters:
     - identifier: globalDrupalDependencyInjection.useDependencyInjection
     # getEntity() is available at runtime on typed data parents but not declared on the interface.
     - identifier: method.notFound
+    # Unit tests hold a mock of the storage. The anti-pattern this rule targets
+    # is production code resolving storage once and caching it on an object.
+    -
+      identifier: drupal.entityStoragePropertyAssignment
+      path: tests/src/Unit/*
   # Canvas Override intentionally extends ContentTemplateAwareViewBuilder which Canvas declares
   # as final. The Canvas issue #3567225 patch removes the final keyword; this exclusion covers
   # the file until that patch is merged into a stable release.

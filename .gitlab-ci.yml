@@ -83,6 +83,17 @@ cspell:
     - cspell "**/*.{php,module,inc,install,test,profile,theme,js,css,md,yml,txt}" --no-progress || true
   allow_failure: true
 
+# Drupal Canvas ships the experimental, hidden `canvas_headless` submodule,
+# whose render converter extends a class from `custom_elements` — a package
+# Canvas only declares in its own require-dev. phpstan-drupal's autoloader
+# loads every discovered extension, so it fatals on that missing parent class
+# and then analyses nothing at all. Canvas Override neither installs nor uses
+# canvas_headless, so drop it before analysis rather than depend on a package
+# for code this project never runs.
+phpstan:
+  before_script:
+    - rm -rf $CI_PROJECT_DIR/web/modules/contrib/canvas/modules/canvas_headless
+
 # Node 20+ required: webship-js >=2.0 declares engines.node ">=20".
 eslint:
   stage: validate

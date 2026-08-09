@@ -1,0 +1,11 @@
+editor:
+  version: VERSION
+  js:
+    js/canvas-override-editor.js: {}
+  css:
+    theme:
+      css/canvas-override-editor.css: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once

@@ -6,6 +6,7 @@ namespace Drupal\canvas_override\Hook;
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -25,6 +26,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Hook implementations for the canvas_override module.
@@ -39,6 +41,7 @@ class CanvasOverrideHooks {
     private readonly MessengerInterface $messenger,
     #[Autowire(service: 'entity_display.repository')]
     private readonly mixed $entityDisplayRepository,
+    private readonly RequestStack $requestStack,
   ) {}
 
   /**
@@ -167,16 +170,22 @@ class CanvasOverrideHooks {
    * Adds a "Canvas" operation to nodes whose type has Canvas enabled.
    */
   #[Hook('entity_operation')]
-  public function entityOperation(EntityInterface $entity): array {
+  public function entityOperation(EntityInterface $entity, CacheableMetadata $cacheability): array {
     if ($entity->getEntityTypeId() !== 'node') {
       return [];
     }
+
+    // Whether this operation appears depends on the current user's
+    // permissions and on the node type's Canvas Override setting.
+    $cacheability->addCacheContexts(['user.permissions']);
 
     /** @var \Drupal\node\NodeInterface $entity */
     $node_type = $this->entityTypeManager->getStorage('node_type')->load($entity->bundle());
     if (!$node_type instanceof NodeTypeInterface) {
       return [];
     }
+
+    $cacheability->addCacheableDependency($node_type);
 
     if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
       return [];
@@ -433,23 +442,25 @@ class CanvasOverrideHooks {
   /**
    * Implements hook_js_settings_alter().
    *
-   * Injects a flag telling the Canvas React app to hide the Page data panel
-   * when editing a canvas_override-enabled node. Nodes use the standard Drupal
-   * edit form for their field data; the Page data panel is not needed here.
+   * Injects a flag telling the Canvas editor to hide the Page data panel when
+   * editing a Canvas Override enabled node. Nodes use the standard Drupal edit
+   * form for their field data; the Page data panel is not needed here.
+   *
+   * The entity is resolved from the request path rather than from route
+   * parameters. Canvas serves its editor shell through a route match that
+   * carries no entity_type/entity parameters, so reading them here always
+   * yields NULL and the flag would never be set.
+   *
+   * @see \Drupal\canvas_override\Hook\CanvasOverrideHooks::libraryInfoAlter()
    */
   #[Hook('js_settings_alter')]
   public function jsSettingsAlter(array &$settings, AttachedAssetsInterface $assets): void {
-    $entity_type = $this->routeMatch->getParameter('entity_type');
-    if ($entity_type !== 'node') {
+    $node = $this->canvasEditorNode();
+    if (!$node instanceof NodeInterface) {
       return;
     }
 
-    $entity = $this->routeMatch->getParameter('entity');
-    if (!$entity instanceof NodeInterface) {
-      return;
-    }
-
-    $node_type = $this->entityTypeManager->getStorage('node_type')->load($entity->bundle());
+    $node_type = $this->entityTypeManager->getStorage('node_type')->load($node->bundle());
     if (!$node_type instanceof NodeTypeInterface) {
       return;
     }
@@ -458,6 +469,45 @@ class CanvasOverrideHooks {
     }
 
     $settings['canvas']['hidePageDataPanel'] = TRUE;
+  }
+
+  /**
+   * Implements hook_library_info_alter().
+   *
+   * Appends this module's editor behaviour to the Canvas editor library, so it
+   * loads with the editor without patching Drupal Canvas. Canvas ships its
+   * editor as a prebuilt bundle, so behaviour that has to change inside the
+   * editor is added alongside it rather than compiled into it.
+   */
+  #[Hook('library_info_alter')]
+  public function libraryInfoAlter(array &$libraries, string $extension): void {
+    if ($extension !== 'canvas' || !isset($libraries['canvas-ui'])) {
+      return;
+    }
+
+    $libraries['canvas-ui']['dependencies'][] = 'canvas_override/editor';
+  }
+
+  /**
+   * Returns the node being edited in the Canvas editor, if any.
+   *
+   * Resolves both the route parameters (when Drupal upcasts them) and the
+   * `/canvas/editor/node/{nid}` request path (when it does not).
+   */
+  private function canvasEditorNode(): ?NodeInterface {
+    $entity = $this->routeMatch->getParameter('entity');
+    if ($entity instanceof NodeInterface
+      && $this->routeMatch->getParameter('entity_type') === 'node') {
+      return $entity;
+    }
+
+    $path = $this->requestStack->getCurrentRequest()?->getPathInfo() ?? '';
+    if (!\preg_match('#^/canvas/editor/node/(\d+)#', $path, $matches)) {
+      return NULL;
+    }
+
+    $node = $this->entityTypeManager->getStorage('node')->load($matches[1]);
+    return $node instanceof NodeInterface ? $node : NULL;
   }
 
   /**

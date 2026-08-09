@@ -1,0 +1,10 @@
+/**
+ * @file
+ * Editor styles for Canvas Override.
+ */
+
+/* Keeps the Page data tab out of the layout even while the editor re-renders,
+   so it never flashes into view before the behaviour hides it. */
+.canvas-override-hidden {
+  display: none !important;
+}
