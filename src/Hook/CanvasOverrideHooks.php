@@ -323,8 +323,15 @@ class CanvasOverrideHooks {
       return;
     }
 
-    // Fields that are being edited in Canvas Override - don't restore these.
-    $preserved_fields = ['title', CANVAS_OVERRIDE_FIELD_NAME];
+    $entity_type = $node->getEntityType();
+    // Don't restore fields that are edited in Canvas Override.
+    // Exclude entity key fields (nid, vid, uuid, langcode, …) and
+    // revision metadata keys as well.
+    $preserved_fields = array_merge(
+      ['title', CANVAS_OVERRIDE_FIELD_NAME],
+      array_values(array_filter($entity_type->getKeys())),
+      array_values(array_filter($entity_type->getRevisionMetadataKeys())),
+    );
 
     foreach ($node->getFieldDefinitions() as $field_name => $definition) {
       if (in_array($field_name, $preserved_fields, TRUE)) {
@@ -418,9 +425,16 @@ class CanvasOverrideHooks {
       return;
     }
 
-    // Restore all field values except title and field_canvas_layout.
-    // These are the only fields that should be modified in Canvas Override.
-    $preserved_fields = ['title', CANVAS_OVERRIDE_FIELD_NAME];
+    $entity_type = $node->getEntityType();
+    // Don't restore fields that are edited in Canvas Override.
+    // Exclude entity key fields (nid, vid, uuid, langcode, …) and
+    // revision metadata keys as well.
+    $preserved_fields = array_merge(
+      ['title', CANVAS_OVERRIDE_FIELD_NAME],
+      array_values(array_filter($entity_type->getKeys())),
+      array_values(array_filter($entity_type->getRevisionMetadataKeys())),
+    );
+
     foreach ($node->getFieldDefinitions() as $field_name => $definition) {
       if (in_array($field_name, $preserved_fields, TRUE)) {
         continue;
