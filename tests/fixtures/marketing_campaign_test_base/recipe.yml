@@ -21,6 +21,9 @@ install:
   - canvas
   - canvas_override
 config:
+  # The profile may already provide some of these (Drupal CMS ships
+  # field_tags); reuse what exists instead of failing on a mismatch.
+  strict: false
   import:
     image:
       - image.style.large
