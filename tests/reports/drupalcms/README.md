@@ -1,3 +1,3 @@
 # reports/drupalcms
 
-Generated webship-js artefacts land here. Files are git-ignored; this README keeps the directory tracked.
+Generated varbase-e2e artefacts land here. Files are git-ignored; this README keeps the directory tracked.

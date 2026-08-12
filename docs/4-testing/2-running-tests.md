@@ -26,7 +26,7 @@ yarn install
 yarn playwright install --with-deps chromium
 ```
 
-webship-js pins `@cucumber/cucumber` to the 12.x line (Node 20 compatible) via a
+varbase-e2e pins `@cucumber/cucumber` to the 12.x line (Node 20 compatible) via a
 `resolutions` entry so the whole suite runs on the same Cucumber instance.
 
 ## Point the suite at your site
@@ -73,11 +73,11 @@ A `--dry-run` checks that every Gherkin step resolves to a definition without
 launching a browser or needing a live site — handy in CI gates and pre-commit:
 
 ```bash
-WEBSHIP_REPORT_DISABLE=1 yarn test -- --dry-run
-WEBSHIP_REPORT_DISABLE=1 yarn test:drupalcms -- --dry-run
+VARBASE_E2E_REPORT_DISABLE=1 yarn test -- --dry-run
+VARBASE_E2E_REPORT_DISABLE=1 yarn test:drupalcms -- --dry-run
 ```
 
-`WEBSHIP_REPORT_DISABLE=1` stops webship-js's automatic HTML/PDF report hook,
+`VARBASE_E2E_REPORT_DISABLE=1` stops varbase-e2e's automatic HTML/PDF report hook,
 which otherwise looks for the default report path on exit.
 
 ## Reports
@@ -85,7 +85,7 @@ which otherwise looks for the default report path on exit.
 Generate the HTML and PDF report after a run:
 
 ```bash
-node ./node_modules/webship-js/bin/generate-reports.js \
+node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js \
   --json tests/reports/drupal/cucumber_report.json \
   --out  tests/reports/drupal/cucumber_report.html \
   --format all \

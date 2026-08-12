@@ -1,7 +1,7 @@
 node_modules/**/*
 # TypeScript config (no TS parser configured for eslint here).
 playwright.config.ts
-# Generated webship-js artefacts.
+# Generated varbase-e2e artefacts.
 tests/reports/**/*
 tests/screenshots/**/*
 tests/videos/**/*

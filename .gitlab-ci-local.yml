@@ -1,19 +1,19 @@
 # Slim pipeline for `gitlab-ci-local` (https://github.com/firecow/gitlab-ci-local).
 #
 # The real .gitlab-ci.yml `include:`s the drupalci templates and runs the
-# webship-js browser jobs inside the drupalci PHP-Apache image with a MySQL
+# varbase-e2e browser jobs inside the drupalci PHP-Apache image with a MySQL
 # service - none of which gitlab-ci-local can reproduce ($_GITLAB_TEMPLATES_REPO
 # is not a public path, and the browser jobs need the composer-built site
 # artifact). This file mirrors the jobs that ARE reproducible locally:
-#   - validate-stage linters on Node 20 (webship-js >=2.0 declares engines.node ">=20")
-#   - a webship-js step-wiring dry-run (no browser, no live site)
+#   - validate-stage linters on Node 20 (varbase-e2e >=2.0 declares engines.node ">=20")
+#   - a varbase-e2e step-wiring dry-run (no browser, no live site)
 #   - the GitLab Pages MkDocs build
 #
 # Usage:
 #   gitlab-ci-local --file .gitlab-ci-local.yml             # all jobs
 #   gitlab-ci-local --file .gitlab-ci-local.yml eslint      # one job
 #   gitlab-ci-local --file .gitlab-ci-local.yml pages       # just the docs build
-#   gitlab-ci-local --file .gitlab-ci-local.yml webship-dry-run
+#   gitlab-ci-local --file .gitlab-ci-local.yml varbase-e2e-dry-run
 
 stages:
   - validate
@@ -46,9 +46,9 @@ eslint:
 
 # Validate every Gherkin step resolves to a definition without launching a
 # browser or needing a live Drupal site. `--dry-run` skips execution; the
-# WEBSHIP_REPORT_DISABLE flag stops webship-js's auto HTML/PDF report hook
+# VARBASE_E2E_REPORT_DISABLE flag stops varbase-e2e's auto HTML/PDF report hook
 # (which would look for the default report path and exit non-zero).
-webship-js-dry-run:
+varbase-e2e-dry-run:
   stage: test
   image: node:20
   before_script:
@@ -57,8 +57,8 @@ webship-js-dry-run:
     - yarn install
     - cp .cucumber.js.bak cucumber.js && rm .cucumber.js.bak
   script:
-    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --dry-run
-    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.drupalcms.js --dry-run
+    - VARBASE_E2E_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --dry-run
+    - VARBASE_E2E_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.drupalcms.js --dry-run
 
 # Mirrors the real `pages` job in .gitlab-ci.yml so the MkDocs build can be
 # verified locally before pushing. The drupalci pipeline schedules pages in

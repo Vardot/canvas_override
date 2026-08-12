@@ -7,13 +7,13 @@
 #      built by the drupalci `composer` job with the Canvas #3567225 patch
 #      applied via `.gitlab-ci/patches.json`.
 #   2. Validation linters         - cspell / eslint (Node 20).
-#   3. webship-js BDD browser jobs - Playwright + Cucumber-js acceptance
+#   3. varbase-e2e BDD browser jobs - Playwright + Cucumber-js acceptance
 #      tests, one per Drupal flavour:
-#        - webship-js-test-drupal-core             -> Drupal Standard profile + Canvas
-#        - webship-js-test-drupal-cms  -> Drupal CMS distribution + Canvas
+#        - varbase-e2e-test-drupal-core             -> Drupal Standard profile + Canvas
+#        - varbase-e2e-test-drupal-cms  -> Drupal CMS distribution + Canvas
 #   4. GitLab Pages               - the Material-for-MkDocs documentation site.
 #
-# The webship-js suite drives the site entirely through the browser. The CI
+# The varbase-e2e suite drives the site entirely through the browser. The CI
 # before_script only has to build the site, apply the two test recipes
 # (tests/fixtures/marketing_campaign_test_base + tests/fixtures/department_test_base) and
 # install Node + Playwright; the seeded campaign node is created through the
@@ -94,7 +94,7 @@ phpstan:
   before_script:
     - rm -rf $CI_PROJECT_DIR/web/modules/contrib/canvas/modules/canvas_headless
 
-# Node 20+ required: webship-js >=2.0 declares engines.node ">=20".
+# Node 20+ required: varbase-e2e >=2.0 declares engines.node ">=20".
 eslint:
   stage: validate
   image: node:20
@@ -126,7 +126,7 @@ eslint:
     - apt-get install -y nodejs
     - node --version && npm --version
     - 'test -f .yarnrc.yml || echo "nodeLinker: node-modules" > .yarnrc.yml'
-    # Back up cucumber.js - webship-js's postinstall can clobber it under yarn 4.
+    # Back up cucumber.js - varbase-e2e's postinstall can clobber it under yarn 4.
     - cp cucumber.js .cucumber.js.bak
     - corepack enable
     - yarn install
@@ -161,13 +161,13 @@ eslint:
       junit: tests/reports/junit.xml
 
 ################
-# webship-js BDD - Drupal Standard profile + Canvas
+# varbase-e2e BDD - Drupal Standard profile + Canvas
 ################
 # Installs the Standard profile and applies the two test recipes (ready
 # "Marketing campaign" with Canvas Override on + plain "Department" type with it
 # off). The @setup feature then creates the seeded campaign node at
 # /canvas-override-test for the editor / reset / tab / access-control scenarios.
-webship-js-test-drupal-core:
+varbase-e2e-test-drupal-core:
   extends: .drupal-node-base
   before_script:
     - !reference [.fragments, web_db]
@@ -184,12 +184,12 @@ webship-js-test-drupal-core:
     - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT cache:rebuild
     - !reference [.fragments, node_playwright]
   script:
-    # cucumber.js loads only `tests/features/drupal/**`. Disable webship-js's
+    # cucumber.js loads only `tests/features/drupal/**`. Disable varbase-e2e's
     # auto HTML hook (it cannot await PDF generation from `process.on('exit')`)
     # and run `generate-reports` explicitly after cucumber-js so both HTML and
     # PDF land next to the JSON in `tests/reports/drupal/`.
-    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --tags "not @wip"
-    - node ./node_modules/webship-js/bin/generate-reports.js
+    - VARBASE_E2E_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.js --tags "not @wip"
+    - node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js
         --json tests/reports/drupal/cucumber_report.json
         --out  tests/reports/drupal/cucumber_report.html
         --format all
@@ -197,14 +197,14 @@ webship-js-test-drupal-core:
   allow_failure: false
 
 ################
-# webship-js BDD - Drupal CMS distribution + Canvas
+# varbase-e2e BDD - Drupal CMS distribution + Canvas
 ################
 # Builds a fresh drupal/cms project (does not collide with the drupalci
 # `composer` artefact, which pins cweagans/composer-patches ~1 and conflicts
 # with drupal/cms >=2.1). Requires drupal/canvas (patched with #3567225) and
 # the local canvas_override path repo, enables both, turns Canvas Override on
 # for the Page type and seeds one page node at /canvas-override-test.
-webship-js-test-drupal-cms:
+varbase-e2e-test-drupal-cms:
   extends: .testing-job-base
   needs: []
   services:
@@ -277,8 +277,8 @@ webship-js-test-drupal-cms:
     - cd $CI_PROJECT_DIR
     - !reference [.fragments, node_playwright]
   script:
-    - WEBSHIP_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.drupalcms.js --tags "not @wip"
-    - node ./node_modules/webship-js/bin/generate-reports.js
+    - VARBASE_E2E_REPORT_DISABLE=1 ./node_modules/.bin/cucumber-js --config cucumber.drupalcms.js --tags "not @wip"
+    - node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js
         --json tests/reports/drupalcms/cucumber_report.json
         --out  tests/reports/drupalcms/cucumber_report.html
         --format all

@@ -1,28 +1,15 @@
-/**
- * @file
- * Custom step definitions for the Canvas Override module test suite.
- *
- * The suite drives the site entirely through the browser - no Drush, no shell.
- * Site provisioning beyond what these steps cover (Drupal install, module
- * enable, the seeded Canvas Override article) is handled by the CI
- * before_script.
- *
- * Navigation and waiting reuse webship-js's own helpers - gotoUrl (friendly
- * navigation errors) and waitForPageLoad (smart-settle: DOM ready, network
- * idle, no pending AJAX/timers) - instead of raw Playwright waits, and
- * failures are wrapped with friendly().
- */
-
 const { Given, Then, When } = require('@cucumber/cucumber');
+
 // Playwright's web-first assertions provide the canonical "smart wait":
 // each matcher auto-retries until it passes or the timeout elapses, so no
 // sleep-then-check is ever needed.
 const { expect } = require('playwright/test');
+
 const {
   friendly,
   gotoUrl,
   waitForPageLoad,
-} = require('webship-js/tests/step-definitions/webship');
+} = require('@vardot/varbase-e2e/tests/step-definitions/varbase-e2e');
 
 /**
  * Run a step body and rethrow any failure as a tester-friendly error.
@@ -37,53 +24,6 @@ async function attempt(body, message) {
     throw friendly(message, err);
   }
 }
-
-/**
- * Log in as a named test user defined in cucumber.shared.js worldParameters.users.
- *
- * The Webmaster row is the site-install super-admin. Every other row is
- * provisioned by `Given I add testing users` (see below).
- *
- * Example #1: Given I am a logged in user with the "Webmaster" user
- * Example #2: Given I am a logged in user with the "Content editor" user
- * Example #3: Given I am a logged in user with "Webmaster"
- */
-Given(
-  /^I am a logged in user with( the)*( username)* "([^"]*)?"( user)?$/,
-  async function (theCase, usernameCase, key, userCase) {
-    const users = this.parameters.users || {};
-    if (!(key in users)) {
-      throw new Error(
-        `No user named "${key}" in cucumber worldParameters.users`,
-      );
-    }
-    const { username, password } = users[key];
-    if (!username || !password) {
-      throw new Error(
-        `User "${key}" is missing username or password in worldParameters.users`,
-      );
-    }
-    await attempt(async () => {
-      await this.context.clearCookies();
-      await gotoUrl(this.page, `${this.parameters.launchUrl}/user/login`);
-      // Resolve the login fields through the named-selector registry so no raw
-      // selector lives in the step body. The registered names map to Drupal's
-      // stable form IDs, which are theme-independent (label text differs
-      // between Olivero and Gin).
-      await this.page
-        .locator(resolveName(this, 'drupal name field'))
-        .fill(username);
-      await this.page
-        .locator(resolveName(this, 'drupal pass field'))
-        .fill(password);
-      await this.page.locator(resolveName(this, 'drupal login submit')).click();
-      await waitForPageLoad(
-        this.page,
-        this.minWaitTime && this.minWaitTime.page,
-      );
-    }, `Could not log in as "${key}"`);
-  },
-);
 
 /**
  * Provision every non-admin user from worldParameters.users via Drupal's
@@ -324,9 +264,9 @@ Given(
 );
 
 /**
- * Resolve a webship-js named selector from the world registry.
+ * Resolve a varbase-e2e named selector from the world registry.
  *
- * The registry (`world.__selectorsCss`) is hydrated by webship-js from
+ * The registry (`world.__selectorsCss`) is hydrated by varbase-e2e from
  * `cucumber.shared.js`'s `selectors.files` list - see tests/selectors/*.json
  * for the catalog. Throws when the name is unknown so a typo never silently
  * passes through to Playwright as a literal CSS string.
@@ -399,12 +339,15 @@ async function assertPresence(world, name, present) {
 Then(/^the Canvas Override tab is available$/, async function () {
   await assertPresence(this, 'node canvas override tab', true);
 });
+
 Then(/^the Canvas Override tab is not available$/, async function () {
   await assertPresence(this, 'node canvas override tab', false);
 });
+
 Then(/^the Reset Canvas layout tab is available$/, async function () {
   await assertPresence(this, 'node canvas reset tab', true);
 });
+
 Then(/^the Reset Canvas layout tab is not available$/, async function () {
   await assertPresence(this, 'node canvas reset tab', false);
 });

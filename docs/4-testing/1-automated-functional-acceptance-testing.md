@@ -1,6 +1,6 @@
 # Automated Functional Acceptance Testing
 
-The functional acceptance suite uses [webship-js](https://www.npmjs.com/package/webship-js)
+The functional acceptance suite uses [varbase-e2e](https://www.npmjs.com/package/varbase-e2e)
 **2.0.x** — a thin Behaviour-Driven Development layer over Playwright and
 Cucumber-js. Scenarios are written in plain Gherkin and driven through a real
 Chromium / Firefox / WebKit browser.
@@ -90,7 +90,7 @@ a one-line *“Did you mean …?”* hint instead of a silent miss. Run
 ## Custom steps
 
 `tests/step-definitions/canvas_override.steps.js` adds the Canvas-Override-specific
-vocabulary on top of webship-js's built-in library:
+vocabulary on top of varbase-e2e's built-in library:
 
 - `Given I am a logged in user with the "<role>" user`
 - `Given I add testing users`
@@ -100,4 +100,4 @@ vocabulary on top of webship-js's built-in library:
 - `Then the "<name>" element should be visible | have a count of N | …`
 
 Everything else (navigation, accessibility audits, JS-error capture, the
-`url should match` assertion) comes straight from webship-js.
+`url should match` assertion) comes straight from varbase-e2e.

@@ -6,18 +6,18 @@ Canvas Override ships two complementary layers of automated tests.
 
 | Layer | Tooling | Location | What it covers |
 |-------|---------|----------|----------------|
-| **Functional acceptance** | [webship-js](https://www.npmjs.com/package/webship-js) (Playwright + Cucumber-js) | `tests/features/`, `tests/step-definitions/` | Real-browser, black-box behaviour on both Drupal Standard and Drupal CMS: the content type form, the Canvas tabs, the per-content editor redirect, the reset action, tab access control, permission registration and accessibility. |
+| **Functional acceptance** | [varbase-e2e](https://www.npmjs.com/package/varbase-e2e) (Playwright + Cucumber-js) | `tests/features/`, `tests/step-definitions/` | Real-browser, black-box behaviour on both Drupal Standard and Drupal CMS: the content type form, the Canvas tabs, the per-content editor redirect, the reset action, tab access control, permission registration and accessibility. |
 | **PHPUnit** | DrupalCI | `tests/src/Unit/` | White-box coverage: per-bundle permission generation in isolation. |
 
 The two layers overlap on purpose. PHPUnit drives the module from inside a
-known Drupal kernel; webship-js drives a fully-built site the same way a real
+known Drupal kernel; varbase-e2e drives a fully-built site the same way a real
 editor would, on the actual front-end themes (Olivero / Claro on Standard,
 Gin / Mercury on Drupal CMS).
 
 ## What the acceptance suite proves
 
 Driven entirely through the browser — no Drush, no shell from inside the
-scenarios — the webship-js suite asserts that:
+scenarios — the varbase-e2e suite asserts that:
 
 - the **Canvas layout** fieldset appears on the content type form and gates on
   the `administer canvas override` permission;
@@ -36,7 +36,7 @@ scenarios — the webship-js suite asserts that:
 
 ## Requirements
 
-- Node.js **>= 20** (webship-js 2.0 declares `engines.node ">=20"`).
+- Node.js **>= 20** (varbase-e2e 2.0 declares `engines.node ">=20"`).
 - A running Drupal site with `canvas` and `canvas_override` enabled, the Canvas
   [#3567225](https://www.drupal.org/project/canvas_override) patch applied, and
   a custom "Marketing campaign" content type with Canvas Override turned on

@@ -12,7 +12,7 @@
     "Varbase",
     "Canvas",
     "Layout",
-    "webship-js",
+    "varbase-e2e",
     "acceptance-testing"
   ],
   "author": "Vardot",
@@ -31,6 +31,7 @@
     "generate-reports": "generate-reports"
   },
   "devDependencies": {
+    "@vardot/varbase-e2e": "~2.0.1",
     "cspell": "^8.16.1",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -51,8 +52,7 @@
     "terser-webpack-plugin": "^5.3.14",
     "underscore": "~1.13.7",
     "webpack": "^5.99.8",
-    "webpack-cli": "^6.0.1",
-    "webship-js": "~2"
+    "webpack-cli": "^6.0.1"
   },
   "browserslist": [
     "last 2 Chrome major versions",
@@ -66,7 +66,7 @@
     "Firefox ESR"
   ],
   "packageManager": "yarn@4.9.3",
-  "_resolutions_note": "webship-js floats @cucumber/cucumber '*' which resolves to v13 (needs Node 22); the resolution below pins the transitive cucumber to the 12.x line so the suite runs on Node 20.",
+  "_resolutions_note": "varbase-e2e floats @cucumber/cucumber '*' which resolves to v13 (needs Node 22); the resolution below pins the transitive cucumber to the 12.x line so the suite runs on Node 20.",
   "resolutions": {
     "@cucumber/cucumber": "12.9.0"
   }

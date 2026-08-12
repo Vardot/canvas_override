@@ -11,7 +11,7 @@ node_modules
 .yarn/
 .yarn/install-state.gz
 
-# webship-js generated test artefacts (keep the tracked README placeholders)
+# varbase-e2e generated test artefacts (keep the tracked README placeholders)
 tests/reports/**/*.json
 tests/reports/**/*.html
 tests/reports/**/*.pdf

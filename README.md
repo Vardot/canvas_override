@@ -72,7 +72,7 @@ For more details, see the [documentation](docs/index.md).
 Canvas Override ships two layers of automated tests:
 
 - **Automated functional acceptance testing** with
-  [webship-js](https://www.npmjs.com/package/webship-js) (Playwright +
+  [varbase-e2e](https://www.npmjs.com/package/varbase-e2e) (Playwright +
   Cucumber-js) under `tests/features/`, split into a Drupal Standard suite and
   a Drupal CMS suite. It drives a real browser to verify the content type form,
   the Canvas tabs, the per-content editor redirect, the reset action, tab
