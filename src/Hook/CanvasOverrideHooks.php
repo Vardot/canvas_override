@@ -151,14 +151,18 @@ class CanvasOverrideHooks {
   }
 
   /**
-   * Implements hook_ENTITY_TYPE_presave() for node_type.
+   * Implements hook_ENTITY_TYPE_insert() and _update() for node_type.
    *
    * Ensures the component_tree field exists whenever a node type is saved with
-   * canvas_override enabled. Covers programmatic enabling (config import,
-   * recipes) where the form submit handler is not triggered.
+   * canvas_override enabled. Covers programmatic enabling and recipes, where
+   * the form submit handler never runs.
    */
-  #[Hook('node_type_presave')]
-  public function nodeTypePresave(NodeTypeInterface $node_type): void {
+  #[Hook('node_type_insert')]
+  #[Hook('node_type_update')]
+  public function nodeTypeSave(NodeTypeInterface $node_type): void {
+    if (\Drupal::isConfigSyncing()) {
+      return;
+    }
     if ($node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
       static::ensureCanvasField($node_type->id());
     }
