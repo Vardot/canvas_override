@@ -181,6 +181,10 @@ varbase-e2e-test-drupal-core:
     - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/marketing_campaign_test_base
     - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/department_test_base
     - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_roles_test_base
+    # Regression fixture for #3616302: a node type carrying canvas_override
+    # enabled INLINE in its own config. On regressed code this apply aborts with
+    # "Missing bundle entity" and fails the job here, before the browser runs.
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_inline_import_test_base
     - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT cache:rebuild
     - !reference [.fragments, node_playwright]
   script:
@@ -272,6 +276,10 @@ varbase-e2e-test-drupal-cms:
     - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/marketing_campaign_test_base
     - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/department_test_base
     - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_roles_test_base
+    # Regression fixture for #3616302: a node type carrying canvas_override
+    # enabled INLINE in its own config. On regressed code this apply aborts with
+    # "Missing bundle entity" and fails the job here, before the browser runs.
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_inline_import_test_base
     - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web cache:rebuild
     # = Node.js 20 + Playwright Chromium (from CI_PROJECT_DIR - features live there) =
     - cd $CI_PROJECT_DIR

@@ -1,0 +1,31 @@
+name: 'Canvas Override - Inline config import (#3616302)'
+description: >
+  Regression fixture for https://www.drupal.org/project/canvas_override/issues/3616302.
+
+  Ships an "Inline campaign" content type whose config carries the
+  canvas_override "enabled" third-party setting INLINE, the way a distribution
+  or recipe author would naively author an already-on type - NOT through a
+  post-import config action like the marketing_campaign_test_base recipe does.
+
+  With the pre-fix node_type_presave hook this import fails during config sync
+  with "Missing bundle entity, entity type node_type" because the hook tries to
+  create field_canvas_layout before the bundle entity exists. With the fix
+  (node_type_insert / node_type_update + an \Drupal::isConfigSyncing() guard)
+  the import completes and the Canvas Layout field is created on the bundle.
+
+  Applying this recipe is therefore itself the regression gate: on regressed
+  code the recipe apply errors out and the job goes red. The paired
+  02-03-01-config-import-inline.feature then asserts the imported type is
+  Canvas Override-enabled and carries the Canvas Layout field.
+
+  Works on both Drupal core (Standard) and Drupal CMS.
+type: 'Content type'
+install:
+  - node
+  - field
+  - text
+  - canvas
+  - canvas_override
+config:
+  strict: false
+  import: {  }

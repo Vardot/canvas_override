@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - canvas_override
+third_party_settings:
+  canvas_override:
+    enabled: true
+name: 'Inline campaign'
+type: inline_campaign
+description: 'A content type that ships with Canvas Override enabled INLINE in its own config, to regression-test #3616302 (config import of a Canvas Override-enabled node type).'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true
