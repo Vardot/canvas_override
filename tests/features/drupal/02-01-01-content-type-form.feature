@@ -19,7 +19,7 @@ Feature: Canvas Override - content type form integration
     Then the "canvas override enable checkbox checked" element should have a count of 1
 
   Scenario: Enabling Canvas Override on a content type creates the layout field
-    # The "Department" type ships from the department_test_base recipe with
+    # The "Design department" type ships from the department_test_base recipe with
     # Canvas Override NOT activated, so this exercises turning it on.
     Given I enable Canvas Override on the "department" content type
     Then the "drupal status messages" element should be visible

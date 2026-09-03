@@ -194,7 +194,7 @@ Given(
     const co = this.parameters.canvasOverride || {};
     const bundle = co.bundle || 'marketing_campaign';
     const alias = co.nodeAlias || '/canvas-override-test';
-    const title = co.nodeTitle || 'Canvas Override Marketing Campaign';
+    const title = co.nodeTitle || 'Professional Web Design Services';
     await attempt(async () => {
       // Idempotency: if the alias already resolves to the campaign, skip.
       await gotoUrl(this.page, `${this.parameters.launchUrl}${alias}`);
@@ -237,7 +237,7 @@ Given(
         {
           data: {
             title,
-            tag: co.nodeTag || 'Spring Sale',
+            tag: co.nodeTag || 'Web Design',
             body: co.nodeBody || '',
             alias,
           },
@@ -369,6 +369,40 @@ Then(/^a Canvas action is offered on the content list$/, async function () {
     'Expected a Canvas action on the content list',
   );
 });
+
+/**
+ * Reset the Canvas layout through the HTMX flow and answer the browser's
+ * native confirmation (hx-confirm). Pass "accept" to confirm the reset or
+ * "dismiss"/"cancel" to keep the layout. Registers the dialog handler before
+ * clicking the Reset local task, then waits for the HX-Redirect to settle.
+ *
+ * Example #1: When I reset the Canvas layout and accept the confirmation
+ * Example #2: When I reset the Canvas layout and dismiss the confirmation
+ */
+When(
+  /^(?:I |we )?reset the Canvas layout and (accept|dismiss|cancel) the confirmation$/,
+  async function (choice) {
+    const accept = choice === 'accept';
+    const sel = resolveName(this, 'node canvas reset tab');
+    await attempt(async () => {
+      // Answer the native confirm dialog that hx-confirm raises on click.
+      this.page.once('dialog', (dialog) => {
+        if (accept) {
+          dialog.accept().catch(() => {});
+        } else {
+          dialog.dismiss().catch(() => {});
+        }
+      });
+      // The Reset tab can live in a collapsed admin-theme dropdown, so click it
+      // in the page context; htmx intercepts and raises the confirm.
+      await this.page.evaluate((s) => {
+        const el = document.querySelector(s);
+        if (el) el.click();
+      }, sel);
+      await waitForPageLoad(this.page, this.minWaitTime && this.minWaitTime.page);
+    }, `Could not reset the Canvas layout (${choice})`);
+  },
+);
 
 /**
  * Assert a named selector is visible / hidden / attached / focused / enabled /

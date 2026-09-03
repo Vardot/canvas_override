@@ -114,12 +114,15 @@ ContentTemplate default:
 ### Via the UI
 
 1. Navigate to the content item.
-2. Click the **Reset to default layout** tab.
-3. Confirm the reset.
+2. Click the **Reset Canvas layout** tab.
+3. Confirm in the prompt that appears. The layout is cleared only after you
+   confirm, so it cannot be reset by accident.
 
 ### Via Direct URL
 
-Navigate to `/node/{id}/canvas/reset`.
+Navigate to `/node/{id}/canvas/reset`. The layout is only cleared after an
+explicit confirmation, so it cannot be reset by accident or by following a
+link.
 
 ### What Reset Does
 

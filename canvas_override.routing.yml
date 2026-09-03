@@ -15,10 +15,26 @@ canvas_override.node.canvas:
 canvas_override.node.canvas.reset:
   path: '/node/{node}/canvas/reset'
   defaults:
-    _controller: '\Drupal\canvas_override\Controller\CanvasResetController::reset'
+    _form: '\Drupal\canvas_override\Form\CanvasResetConfirmForm'
     _title: 'Reset Canvas layout'
   requirements:
     _canvas_reset_access: 'TRUE'
+    node: '\d+'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+# HTMX endpoint: the Reset local task posts here after the hx-confirm prompt.
+# POST only, CSRF-protected via a token in the generated URL.
+canvas_override.node.canvas.reset.do:
+  path: '/node/{node}/canvas/reset/confirm'
+  defaults:
+    _controller: '\Drupal\canvas_override\Controller\CanvasResetController::reset'
+  methods: [POST]
+  requirements:
+    _canvas_reset_access: 'TRUE'
+    _csrf_token: 'TRUE'
     node: '\d+'
   options:
     parameters:

@@ -7,7 +7,7 @@ Feature: Provision the Canvas Override test site
   # The CI before_script installs Drupal and applies three recipes:
   #   - tests/fixtures/marketing_campaign_test_base  -> the ready "Marketing campaign"
   #     type with Canvas Override already activated and its default layout;
-  #   - tests/fixtures/department_test_base   -> a plain "Department" type with
+  #   - tests/fixtures/department_test_base   -> a plain "Design department" type with
   #     Canvas Override NOT activated, for the enable-through-the-form test;
   #   - tests/fixtures/canvas_override_roles_test_base -> one role per Canvas
   #     Override permission tier, for the access matrix.

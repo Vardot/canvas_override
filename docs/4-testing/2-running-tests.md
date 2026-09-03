@@ -14,7 +14,7 @@
      drush recipe modules/contrib/canvas_override/tests/fixtures/department_test_base
      ```
    The `@setup` feature creates the seeded campaign node at
-   `/canvas-override-test` through the browser on the first run.
+   `/web-design-services` through the browser on the first run.
 2. Node.js **>= 20**.
 
 ## Install the test dependencies

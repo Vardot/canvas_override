@@ -39,7 +39,7 @@ Once enabled for a content type, editors see a **Canvas** tab on each content it
 |------|-------------|
 | `/node/{node}/canvas` | Open the per-content Canvas editor |
 | `/node/{node}/canvas/default` | Edit the shared ContentTemplate default layout |
-| `/node/{node}/canvas/reset` | Reset the content layout to the content type default |
+| `/node/{node}/canvas/reset` | Confirm and reset the content layout to the content type default |
 
 ### Permissions
 

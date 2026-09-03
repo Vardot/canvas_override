@@ -8,6 +8,7 @@ use Drupal\canvas_override\CanvasOverrideServiceProvider;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -79,6 +80,21 @@ class CanvasOverrideHooks {
     $node_type = $this->entityTypeManager->getStorage('node_type')->load($entity->bundle());
     if (!$node_type?->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
       return;
+    }
+
+    // Load HTMX on the content page (for users who can see the Reset local task)
+    // so that task can confirm and reset through HTMX. Attached from the node
+    // build rather than the local task because some admin themes re-render the
+    // tabs and drop the task's #attached library.
+    $account = \Drupal::currentUser();
+    $bundle = $entity->bundle();
+    if ($account->hasPermission('administer canvas override')
+      || $account->hasPermission('use canvas override')
+      || $account->hasPermission("use canvas override for $bundle")
+      || $account->hasPermission('reset canvas layout')
+      || $account->hasPermission("reset canvas layout for $bundle")) {
+      $build['#attached']['library'][] = 'core/htmx';
+      $build['#cache']['contexts'][] = 'user.permissions';
     }
 
     if (!$entity->hasField(CANVAS_OVERRIDE_FIELD_NAME) || $entity->get(CANVAS_OVERRIDE_FIELD_NAME)->isEmpty()) {
@@ -572,7 +588,7 @@ class CanvasOverrideHooks {
    *   'administer canvas override'.
    */
   #[Hook('menu_local_tasks_alter', order: new OrderAfter(modules: ['drupal_cms_helper']))]
-  public function menuLocalTasksAlter(array &$data, string $route_name): void {
+  public function menuLocalTasksAlter(array &$data, string $route_name, RefinableCacheableDependencyInterface &$cacheability): void {
     if ($route_name !== 'entity.node.canonical' && $route_name !== 'entity.node.edit_form') {
       return;
     }
@@ -604,12 +620,39 @@ class CanvasOverrideHooks {
       }
     }
 
-    // Reset Canvas layout tab: hide if the user cannot reset layouts.
+    // Reset Canvas layout tab: hide if the user cannot reset layouts. Otherwise
+    // wire it to confirm and reset through HTMX: clicking it asks for
+    // confirmation (hx-confirm, the browser's native prompt), then posts to the
+    // reset endpoint, which clears the layout and sends an HX-Redirect back to
+    // the content. No dialog markup or CSS is involved. The link's href still
+    // points at the standalone confirmation form, so without JavaScript it falls
+    // back to a normal confirm page.
     if (isset($data['tabs'][0]['canvas_override.node.canvas.reset'])) {
       $can_reset = $account->hasPermission('reset canvas layout')
         || $account->hasPermission("reset canvas layout for $bundle");
       if (!$is_admin && !$can_use && !$can_reset) {
         unset($data['tabs'][0]['canvas_override.node.canvas.reset']);
+      }
+      elseif (isset($data['tabs'][0]['canvas_override.node.canvas.reset']['#link'])) {
+        // Generate with bubbleable metadata so RouteProcessorCsrf emits a
+        // placeholder plus a lazy builder instead of baking a real token in.
+        // Without metadata it embeds the token AND skips the 'session' cache
+        // context, so the cached local-tasks array hands one user's token to
+        // everybody else and the POST is rejected with 403.
+        // @see \Drupal\Core\Access\RouteProcessorCsrf::processOutbound()
+        $generated = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()])->toString(TRUE);
+        $cacheability->addCacheableDependency($generated);
+        $post_url = $generated->getGeneratedUrl();
+        $message = (string) $this->t('Reset the Canvas layout for "@title"? This removes the custom layout and restores the default @type layout, and cannot be undone.', [
+          '@title' => $node->label(),
+          '@type' => $node_type->label(),
+        ]);
+        $link = &$data['tabs'][0]['canvas_override.node.canvas.reset']['#link'];
+        $link['localized_options']['attributes']['hx-post'] = $post_url;
+        $link['localized_options']['attributes']['hx-confirm'] = $message;
+        $link['localized_options']['attributes']['hx-swap'] = 'none';
+        // The core/htmx library is attached from the node build (entityViewAlter)
+        // so it survives admin themes that re-render the local tasks.
       }
     }
 

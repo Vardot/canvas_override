@@ -22,7 +22,7 @@ Feature: Canvas Override - content type form on Drupal CMS
     And there should be no JavaScript errors
 
   Scenario: Enabling Canvas Override on a content type creates the layout field
-    # The "Department" type ships from the department_test_base recipe with
+    # The "Design department" type ships from the department_test_base recipe with
     # Canvas Override NOT activated, so this exercises turning it on via Gin.
     Given I enable Canvas Override on the "department" content type
     Then the "drupal status messages" element should be visible

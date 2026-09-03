@@ -77,18 +77,20 @@ module.exports = {
     bundleLabel:
       process.env.CANVAS_OVERRIDE_BUNDLE_LABEL || 'Marketing campaign',
     nodeAlias:
-      process.env.CANVAS_OVERRIDE_NODE_ALIAS || '/canvas-override-test',
+      process.env.CANVAS_OVERRIDE_NODE_ALIAS || '/web-design-services',
     // The seeded campaign the @setup feature creates through the browser. Held
     // here (not hard-coded inside the step) so a single place defines the
-    // fixture content.
+    // fixture content. Realistic marketing-campaign copy, not placeholder text.
     nodeTitle:
       process.env.CANVAS_OVERRIDE_NODE_TITLE ||
-      'Canvas Override Marketing Campaign',
-    nodeTag: process.env.CANVAS_OVERRIDE_NODE_TAG || 'Spring Sale',
+      'Professional Web Design Services',
+    nodeTag: process.env.CANVAS_OVERRIDE_NODE_TAG || 'Web Design',
     nodeBody:
       process.env.CANVAS_OVERRIDE_NODE_BODY ||
-      'Join our Spring Sale campaign. Limited-time offers across the store, ' +
-        'composed on the shared Marketing campaign Canvas layout.',
+      'We design and build accessible, high-performance websites tailored to ' +
+        'your brand. From strategy and UX to responsive front-end development, ' +
+        'our team delivers a polished online presence that converts. Book a ' +
+        'free consultation to discuss your project.',
     // A second content type the setup feature enables through the browser to
     // exercise the content-type form flow end to end.
     formBundle: process.env.CANVAS_OVERRIDE_FORM_BUNDLE || 'page',
