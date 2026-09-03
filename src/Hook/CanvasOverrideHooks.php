@@ -389,7 +389,7 @@ class CanvasOverrideHooks {
    * failures for required fields that are not being edited in Canvas Override.
    */
   #[Hook('entity_bundle_field_info_alter')]
-  public function entityBundleFieldInfoAlter(array &$fields, EntityTypeInterface $entity_type, string $bundle): void {
+  public function entityBundleFieldInfoAlter(array &$fields, EntityTypeInterface $entity_type, ?string $bundle): void {
     if ($entity_type->id() !== 'node') {
       return;
     }
