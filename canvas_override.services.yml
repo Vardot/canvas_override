@@ -1,4 +1,7 @@
 services:
+  Drupal\canvas_override\CanvasOverridePageResolver:
+    autowire: true
+
   Drupal\canvas_override\CanvasOverridePermissions:
     arguments: ['@entity_type.manager']
 

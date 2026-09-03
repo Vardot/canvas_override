@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Hook;
 
+use Drupal\canvas_override\CanvasOverridePageResolver;
 use Drupal\canvas_override\CanvasOverrideServiceProvider;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
@@ -44,6 +45,7 @@ class CanvasOverrideHooks {
     #[Autowire(service: 'entity_display.repository')]
     private readonly mixed $entityDisplayRepository,
     private readonly RequestStack $requestStack,
+    private readonly CanvasOverridePageResolver $pageResolver,
   ) {}
 
   /**
@@ -140,6 +142,32 @@ class CanvasOverrideHooks {
     // @see \Drupal\canvas_override\CanvasOverrideServiceProvider
     // @see https://www.drupal.org/i/3620603
     $available = CanvasOverrideServiceProvider::isComponentTreeLoaderExtendable();
+
+    // A container compiled while Canvas was patched still names our subclass,
+    // so if the patch later disappears, requests that load that service fail
+    // until the container is rebuilt. The service provider cannot fix this on
+    // its own -- it only runs at build time -- so surface it here.
+    $container = \Drupal::getContainer();
+    $stale = !$available
+      && $container->hasParameter(CanvasOverrideServiceProvider::SWAPPED_PARAMETER)
+      && (bool) $container->getParameter(CanvasOverrideServiceProvider::SWAPPED_PARAMETER);
+
+    if ($stale) {
+      $form['canvas_override']['canvas_override_stale'] = [
+        '#type' => 'container',
+        '#weight' => -11,
+        'message' => [
+          '#theme' => 'status_messages',
+          '#message_list' => [
+            'error' => [
+              $this->t('The cached service container was built while Canvas still allowed <code>@class</code> to be extended. Rebuild the site caches to switch per-content Canvas layout editing off cleanly.', [
+                '@class' => 'Drupal\\canvas\\Storage\\ComponentTreeLoader',
+              ]),
+            ],
+          ],
+        ],
+      ];
+    }
 
     if (!$available) {
       $form['canvas_override']['canvas_override_unavailable'] = [
@@ -634,15 +662,17 @@ class CanvasOverrideHooks {
         unset($data['tabs'][0]['canvas_override.node.canvas.reset']);
       }
       elseif (isset($data['tabs'][0]['canvas_override.node.canvas.reset']['#link'])) {
-        // Generate with bubbleable metadata so RouteProcessorCsrf emits a
-        // placeholder plus a lazy builder instead of baking a real token in.
-        // Without metadata it embeds the token AND skips the 'session' cache
-        // context, so the cached local-tasks array hands one user's token to
-        // everybody else and the POST is rejected with 403.
+        // Generate WITHOUT bubbleable metadata so RouteProcessorCsrf embeds a
+        // real token rather than a placeholder: a placeholder is only resolved
+        // when its lazy builder is registered via #attached['placeholders'],
+        // and this hook has nowhere to bubble attachments -- $cacheability
+        // carries contexts, tags and max-age only. The token is per session, so
+        // vary the cached local tasks by session; without that, one user's token
+        // is served to everybody and the POST is rejected with
+        // "'csrf_token' URL query argument is invalid".
         // @see \Drupal\Core\Access\RouteProcessorCsrf::processOutbound()
-        $generated = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()])->toString(TRUE);
-        $cacheability->addCacheableDependency($generated);
-        $post_url = $generated->getGeneratedUrl();
+        $post_url = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()])->toString();
+        $cacheability->addCacheContexts(['session']);
         $message = (string) $this->t('Reset the Canvas layout for "@title"? This removes the custom layout and restores the default @type layout, and cannot be undone.', [
           '@title' => $node->label(),
           '@type' => $node_type->label(),
@@ -711,6 +741,40 @@ class CanvasOverrideHooks {
     }
 
     \Drupal::messenger()->addStatus(\t('A Canvas layout field has been added to this content type. Each content item will have its own Canvas layout editable from the <strong>Canvas</strong> tab.'));
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_update() for canvas_page.
+   *
+   * Copies a backing page's tree onto the node it backs. The node renders from
+   * its own field, so this is the only place the two need to meet.
+   *
+   * @see \Drupal\canvas_override\CanvasOverridePageResolver::syncPageToNode()
+   * @see https://www.drupal.org/i/3620603
+   */
+  #[Hook('canvas_page_update')]
+  public function canvasPageUpdate(EntityInterface $page): void {
+    $this->pageResolver->syncPageToNode($page);
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_insert() for canvas_page.
+   */
+  #[Hook('canvas_page_insert')]
+  public function canvasPageInsert(EntityInterface $page): void {
+    $this->pageResolver->syncPageToNode($page);
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_delete() for node.
+   *
+   * A backing page exists only to edit its node, so it goes when the node does.
+   */
+  #[Hook('node_delete')]
+  public function nodeDelete(EntityInterface $node): void {
+    if ($node instanceof NodeInterface) {
+      $this->pageResolver->deletePage($node);
+    }
   }
 
 }
