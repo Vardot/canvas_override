@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Controller;
 
+use Drupal\canvas\AutoSave\AutoSaveManager;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
@@ -34,7 +35,17 @@ final class CanvasResetController extends ControllerBase {
 
     if ($node->hasField(\CANVAS_OVERRIDE_FIELD_NAME)) {
       $node->set(\CANVAS_OVERRIDE_FIELD_NAME, NULL);
+      // Record the reset as its own revision so the previous layout stays in
+      // the node's revision history instead of being overwritten in place.
+      $node->setNewRevision(TRUE);
+      $node->setRevisionLogMessage('Canvas layout reset to the shared default template.');
+      $node->setRevisionUserId((int) $this->currentUser()->id());
+      $node->setRevisionCreationTime(\Drupal::time()->getRequestTime());
       $node->save();
+      // Drop any pending Canvas auto-save: it holds a full snapshot of the
+      // node including the old layout, so publishing it later would silently
+      // restore what was just reset.
+      \Drupal::service(AutoSaveManager::class)->delete($node);
       $this->messenger()->addStatus($this->t('Canvas layout reset to the shared default template.'));
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Form;
 
+use Drupal\canvas\AutoSave\AutoSaveManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -111,7 +112,17 @@ final class CanvasResetConfirmForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     if ($this->node && $this->node->hasField(\CANVAS_OVERRIDE_FIELD_NAME)) {
       $this->node->set(\CANVAS_OVERRIDE_FIELD_NAME, NULL);
+      // Record the reset as its own revision so the previous layout stays in
+      // the node's revision history instead of being overwritten in place.
+      $this->node->setNewRevision(TRUE);
+      $this->node->setRevisionLogMessage('Canvas layout reset to the shared default template.');
+      $this->node->setRevisionUserId((int) $this->currentUser()->id());
+      $this->node->setRevisionCreationTime(\Drupal::time()->getRequestTime());
       $this->node->save();
+      // Drop any pending Canvas auto-save: it holds a full snapshot of the
+      // node including the old layout, so publishing it later would silently
+      // restore what was just reset.
+      \Drupal::service(AutoSaveManager::class)->delete($this->node);
       $this->messenger()->addStatus($this->t('Canvas layout reset to the shared default template.'));
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
