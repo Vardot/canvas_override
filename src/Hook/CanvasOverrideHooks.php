@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override\Hook;
 
+use Drupal\canvas_override\CanvasOverrideServiceProvider;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -132,11 +133,38 @@ class CanvasOverrideHooks {
       '#access' => \Drupal::currentUser()->hasPermission('administer canvas override'),
     ];
 
+    // Per-content layouts need a Canvas whose ComponentTreeLoader can be
+    // extended. Without it the service swap is skipped, so enabling this would
+    // save a setting that does nothing. Say so here, where someone is actually
+    // trying to switch it on, rather than on every site's status report.
+    // @see \Drupal\canvas_override\CanvasOverrideServiceProvider
+    // @see https://www.drupal.org/i/3620603
+    $available = CanvasOverrideServiceProvider::isComponentTreeLoaderExtendable();
+
+    if (!$available) {
+      $form['canvas_override']['canvas_override_unavailable'] = [
+        '#type' => 'container',
+        '#weight' => -10,
+        'message' => [
+          '#theme' => 'status_messages',
+          '#message_list' => [
+            'warning' => [
+              $this->t('Per-content Canvas layout editing is unavailable. This Canvas release ships <code>@class</code> as a final class, so Canvas Override cannot extend it and the setting below would have no effect. Apply the Canvas patch listed on the <a href="@project" target="_blank" rel="noopener">Canvas Override project page</a>, then rebuild caches.', [
+                '@class' => 'Drupal\\canvas\\Storage\\ComponentTreeLoader',
+                '@project' => 'https://www.drupal.org/project/canvas_override',
+              ]),
+            ],
+          ],
+        ],
+      ];
+    }
+
     $form['canvas_override']['canvas_override_enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable per-content Canvas layout editing on the <em>full content</em> view mode'),
       '#description' => $this->t('When enabled, each content item of this type gets its own Canvas layout. A <strong>Canvas Override</strong> tab appears on every content item, allowing editors to visually compose a unique page layout with Canvas components.'),
       '#default_value' => $is_enabled,
+      '#disabled' => !$available,
     ];
 
     $form['canvas_override']['canvas_override_was_enabled'] = [
