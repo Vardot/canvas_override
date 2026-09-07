@@ -44,9 +44,13 @@ final class CanvasTabAccessCheck implements AccessInterface {
 
     $enabled = (bool) $node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE);
 
+    // Editing a per-content layout modifies the node, so the Canvas Override
+    // permissions gate the feature while the node's own update access gates
+    // the entity: a user who cannot edit this node must not edit its layout.
     return AccessResult::allowedIf($enabled)
       ->addCacheableDependency($node_type)
-      ->cachePerPermissions();
+      ->cachePerPermissions()
+      ->andIf($node->access('update', $account, TRUE));
   }
 
 }

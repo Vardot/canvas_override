@@ -46,9 +46,15 @@ final class CanvasResetAccessCheck implements AccessInterface {
 
     $enabled = (bool) $node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE);
 
+    // The dedicated reset permissions deliberately allow resetting without
+    // full node edit access (a "reset-only" role is supported), but the user
+    // must at least be able to VIEW the node: without this, a reset-only
+    // user could wipe the stored layout of unpublished or otherwise hidden
+    // content they cannot even see.
     return AccessResult::allowedIf($enabled)
       ->addCacheableDependency($node_type)
-      ->cachePerPermissions();
+      ->cachePerPermissions()
+      ->andIf($node->access('view', $account, TRUE));
   }
 
 }
