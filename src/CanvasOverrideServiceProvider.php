@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\canvas_override;
 
+use Drupal\canvas\Access\ComponentTreeEditAccessCheck;
 use Drupal\canvas\Storage\ComponentTreeLoader;
+use Drupal\canvas_override\Access\CanvasOverrideComponentTreeEditAccessCheck;
 use Drupal\canvas_override\Storage\CanvasOverrideComponentTreeLoader;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
@@ -27,6 +29,34 @@ class CanvasOverrideServiceProvider extends ServiceProviderBase {
    */
   public function alter(ContainerBuilder $container): void {
     $this->swapComponentTreeLoader($container);
+    $this->hardenComponentTreeEditAccessCheck($container);
+  }
+
+  /**
+   * Makes Canvas's component-tree edit access check fail safely.
+   *
+   * Canvas's ComponentTreeEditAccessCheck throws \LogicException (via the
+   * loader) for entities Canvas cannot edit — every node bundle on an
+   * unpatched Canvas — which surfaces as a 500 on the editor and canvas.api.*
+   * routes. Retarget its service (consumed only through the access_check tag,
+   * so nothing type-hints the concrete class) to a module check that composes
+   * it and returns a cacheable 403 instead. Safe on patched Canvas too: the
+   * injected loader is then the subclass and no exception is thrown.
+   *
+   * Unlike ComponentTreeLoader, ComponentTreeEditAccessCheck being final is not
+   * a problem here — the module class composes it (its constructor is public)
+   * rather than extending it, so the class always loads.
+   *
+   * @see \Drupal\canvas_override\Access\CanvasOverrideComponentTreeEditAccessCheck
+   */
+  private function hardenComponentTreeEditAccessCheck(ContainerBuilder $container): void {
+    if (!$container->hasDefinition(ComponentTreeEditAccessCheck::class)) {
+      return;
+    }
+
+    $definition = $container->getDefinition(ComponentTreeEditAccessCheck::class);
+    $definition->setClass(CanvasOverrideComponentTreeEditAccessCheck::class);
+    $definition->setArguments([]);
   }
 
   /**
