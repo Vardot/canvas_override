@@ -38,8 +38,12 @@ Once enabled for a content type, editors see a **Canvas** tab on each content it
 | Path | Description |
 |------|-------------|
 | `/node/{node}/canvas` | Open the per-content Canvas editor |
-| `/node/{node}/canvas/default` | Edit the shared ContentTemplate default layout |
 | `/node/{node}/canvas/reset` | Confirm and reset the content layout to the content type default |
+
+The shared ContentTemplate default layout is edited through the **Edit
+template** tab that Canvas itself provides on content. Canvas Override limits
+that tab to users with the **Edit Canvas default template** permission (or the
+per-type variant).
 
 ### Permissions
 
