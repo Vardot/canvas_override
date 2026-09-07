@@ -29,6 +29,7 @@ use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Hook implementations for the canvas_override module.
@@ -656,16 +657,31 @@ class CanvasOverrideHooks {
         // per session, and core adds the 'session' cache context itself when it
         // has somewhere to put it. It does not here, so add it explicitly.
         // @see \Drupal\Core\Access\RouteProcessorCsrf::processOutbound()
-        $post_url = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()])->toString();
-        $cacheability->addCacheContexts(['session']);
-        $message = (string) $this->t('Reset the Canvas layout for "@title"? This removes the custom layout and restores the default @type layout, and cannot be undone.', [
-          '@title' => $node->label(),
-          '@type' => $node_type->label(),
-        ]);
-        $link = &$data['tabs'][0]['canvas_override.node.canvas.reset']['#link'];
-        $link['localized_options']['attributes']['hx-post'] = $post_url;
-        $link['localized_options']['attributes']['hx-confirm'] = $message;
-        $link['localized_options']['attributes']['hx-swap'] = 'none';
+        //
+        // The route may be missing from the router table when newer module
+        // code runs against a stale router (a deploy before the cache
+        // rebuild). The HTMX confirm shortcut is an enhancement only -- the
+        // tab's href already points at the standalone confirm form -- so a
+        // missing route must degrade to that fallback, not fatal every page
+        // that renders local tasks.
+        $post_url = NULL;
+        try {
+          $post_url = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()])->toString();
+        }
+        catch (RouteNotFoundException) {
+          // Leave $post_url NULL: the tab falls back to the confirm form.
+        }
+        if ($post_url !== NULL) {
+          $cacheability->addCacheContexts(['session']);
+          $message = (string) $this->t('Reset the Canvas layout for "@title"? This removes the custom layout and restores the default @type layout, and cannot be undone.', [
+            '@title' => $node->label(),
+            '@type' => $node_type->label(),
+          ]);
+          $link = &$data['tabs'][0]['canvas_override.node.canvas.reset']['#link'];
+          $link['localized_options']['attributes']['hx-post'] = $post_url;
+          $link['localized_options']['attributes']['hx-confirm'] = $message;
+          $link['localized_options']['attributes']['hx-swap'] = 'none';
+        }
         // The core/htmx library is attached from the node build (entityViewAlter)
         // so it survives admin themes that re-render the local tasks.
       }
