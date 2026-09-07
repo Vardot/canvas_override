@@ -87,15 +87,19 @@ class CanvasOverrideHooks {
     // so that task can confirm and reset through HTMX. Attached from the node
     // build rather than the local task because some admin themes re-render the
     // tabs and drop the task's #attached library.
+    // The build varies by permission either way (with or without the htmx
+    // library), so the context must be recorded unconditionally: adding it
+    // only on the granted branch lets a build cached for a user without the
+    // permission be reused for one who has it, missing the library.
     $account = \Drupal::currentUser();
     $bundle = $entity->bundle();
+    $build['#cache']['contexts'][] = 'user.permissions';
     if ($account->hasPermission('administer canvas override')
       || $account->hasPermission('use canvas override')
       || $account->hasPermission("use canvas override for $bundle")
       || $account->hasPermission('reset canvas layout')
       || $account->hasPermission("reset canvas layout for $bundle")) {
       $build['#attached']['library'][] = 'core/htmx';
-      $build['#cache']['contexts'][] = 'user.permissions';
     }
 
     if (!$entity->hasField(CANVAS_OVERRIDE_FIELD_NAME) || $entity->get(CANVAS_OVERRIDE_FIELD_NAME)->isEmpty()) {
@@ -603,6 +607,14 @@ class CanvasOverrideHooks {
     if (!$node_type instanceof NodeTypeInterface) {
       return;
     }
+
+    // The tab set varies by the node type's setting, the user's permissions
+    // and the node itself (its label is embedded in the hx-confirm message).
+    // Record all of that before any early return, so enabling/disabling the
+    // setting or changing permissions invalidates cached local tasks.
+    $cacheability->addCacheableDependency($node_type);
+    $cacheability->addCacheContexts(['user.permissions']);
+    $cacheability->addCacheableDependency($node);
 
     if (!$node_type->getThirdPartySetting('canvas_override', 'enabled', FALSE)) {
       return;
