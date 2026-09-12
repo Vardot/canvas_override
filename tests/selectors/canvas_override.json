@@ -13,24 +13,20 @@
     "node tags field": "#edit-field-tags-0-target-id",
     "node path alias field": "#edit-path-0-alias",
     "node path pathauto checkbox": "#edit-path-0-pathauto",
-
     "canvas override fieldset": "details#edit-canvas-override",
     "canvas override fieldset summary": "details#edit-canvas-override > summary",
     "canvas override vertical tab": ".vertical-tabs__menu-item a[href$='#edit-canvas-override'], a[href='#edit-canvas-override']",
     "canvas override enable checkbox": "#edit-canvas-override-enabled",
     "canvas override enable checkbox checked": "#edit-canvas-override-enabled:checked",
     "canvas override enable label": "label[for='edit-canvas-override-enabled']",
-
     "node primary tabs": "nav.tabs, .tabs--primary, [data-drupal-nav-tabs], .gin--navigation-top-bar, .top-bar__content",
     "node canvas override tab": "a[href*='/node/'][href$='/canvas']",
     "node canvas reset tab": "a[href*='/node/'][href$='/canvas/reset']",
     "node edit template tab": "a[href*='/node/'][href*='/template']",
     "node canvas override tab by text": "a[href*='/node/'][href$='/canvas']:has-text('Canvas')",
     "node reset layout tab by text": "a[href*='/node/'][href$='/canvas/reset']:has-text('Reset')",
-
     "content canvas operation link": "td a[href*='/canvas?'], td a[href$='/canvas'], .dropbutton a[href*='/canvas?'], .dropbutton a[href$='/canvas']",
     "content table": "table",
-
     "canvas editor frame": "[data-testid='canvas-editor-frame']",
     "canvas container": ".canvas-container, #canvas-app, [data-canvas-app]",
     "canvas side menu": "[data-testid='canvas-side-menu']",
@@ -42,7 +38,6 @@
     "canvas layers button": "[data-testid='canvas-side-menu'] [aria-label='Layers']",
     "canvas library components tab": "[data-testid='canvas-library-components-tab-select']",
     "canvas library components content": "[data-testid='canvas-library-components-tab-content']",
-
     "permission administer canvas override row": "tr:has-text('Administer Canvas Override')",
     "permission use canvas override row": "tr:has-text('Use Canvas Override for all content types')",
     "permission edit canvas default template row": "tr:has-text('Edit Canvas default template')",
@@ -50,14 +45,15 @@
     "permission per bundle use canvas override row": "tr:has-text(': Use Canvas Override')",
     "permission per bundle reset canvas layout row": "tr:has-text(': Reset Canvas layout')",
     "permissions table": "table#permissions, form#user-admin-permissions table",
-
     "drupal status messages": ".messages--status, .messages[role='contentinfo'], [data-drupal-messages] .message-item, .message-list .message-item, .message-item",
     "drupal error messages": ".messages--error, .messages[role='alert']",
     "drupal warning messages": ".messages--warning",
     "drupal page heading": "h1",
     "drupal page title": "h1.page-title, .region-page-title h1",
     "drupal main content": "main, [role='main'], .main-content",
-    "gin admin form": "form.gin--has-sticky-form-actions, form.gin-sticky-form-actions, body.gin--edit-form form"
+    "gin admin form": "form.gin--has-sticky-form-actions, form.gin-sticky-form-actions, body.gin--edit-form form",
+    "canvas first component": "[aria-label^=\"Draggable component\"]",
+    "canvas prop linker": "[data-canvas-link-suggestions]"
   },
   "xpath": {}
 }

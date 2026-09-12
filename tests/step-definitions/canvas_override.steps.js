@@ -662,3 +662,118 @@ Given(
     }, `Could not open the Canvas Override test content "${suffix}" route`);
   },
 );
+
+/**
+ * Record the status of every Canvas layout API call from here on.
+ *
+ * Saving a component's props in the editor goes through
+ * PATCH /canvas/api/v0/layout/{entity_type}/{entity}. On a per-content layout
+ * that call used to return a 500 ("A host entity is required to set entity
+ * field prop sources.") for every component seeded from the content type's
+ * ContentTemplate, because those carry entity-field prop sources and Canvas
+ * only resolves a host entity for content templates. The editor silently
+ * discarded the change, so the failure is invisible in the UI: it has to be
+ * asserted on the network.
+ *
+ * @see https://www.drupal.org/project/canvas_override/issues/3621557
+ *
+ * Example: Given I watch the Canvas layout API calls
+ */
+Given(/^(?:I |we )?watch the Canvas layout API calls$/, function () {
+  this.canvasLayoutCalls = [];
+  if (this.canvasLayoutListener) {
+    this.page.off('response', this.canvasLayoutListener);
+  }
+  this.canvasLayoutListener = (response) => {
+    const url = response.url();
+    if (url.includes('/canvas/api/v0/layout/')) {
+      this.canvasLayoutCalls.push({
+        method: response.request().method(),
+        status: response.status(),
+        url,
+      });
+    }
+  };
+  this.page.on('response', this.canvasLayoutListener);
+});
+
+/**
+ * Assert that no watched Canvas layout API call failed.
+ *
+ * Example: Then no Canvas layout API call should have failed
+ */
+Then(
+  /^no Canvas layout API call should have failed$/,
+  { timeout: 60 * 1000 },
+  async function () {
+    const calls = this.canvasLayoutCalls || [];
+    const failed = calls.filter((call) => call.status >= 400);
+    expect(
+      failed,
+      `Canvas layout API calls failed: ${JSON.stringify(failed)}`,
+    ).toHaveLength(0);
+    expect(
+      calls.length,
+      'No Canvas layout API call was observed; the editor did not save anything.',
+    ).toBeGreaterThan(0);
+  },
+);
+
+/**
+ * Change a setting on each of the first few components in the canvas.
+ *
+ * Walking several components matters: the bug this guards only fires for a
+ * component whose props carry an entity-field prop source, and which component
+ * that is depends on the site's ContentTemplate for the bundle (on a seeded
+ * blog layout the first component is a breadcrumb block with no binding, while
+ * the bound heading sits behind it). Components with no settings form, and a
+ * layout with no components at all, are skipped: the accompanying assertion
+ * that no Canvas layout API call failed is what guards the fix.
+ *
+ * Example: When I edit the first component's settings if the layout has any
+ */
+When(
+  /^(?:I |we )?edit the first component's settings if the layout has any$/,
+  { timeout: 180 * 1000 },
+  async function () {
+    const components = this.page.locator('[aria-label^="Draggable component"]');
+    await this.page.waitForTimeout(3000);
+    const total = await components.count();
+    if (total === 0) {
+      return;
+    }
+
+    const maxComponents = Math.min(total, 5);
+    for (let index = 0; index < maxComponents; index++) {
+      const box = await components.nth(index).boundingBox();
+      if (!box) {
+        continue;
+      }
+      await this.page.mouse.click(
+        box.x + box.width / 2,
+        box.y + Math.min(20, box.height / 2),
+      );
+      const selects = this.page.locator('[role="tabpanel"] select');
+      try {
+        await selects.first().waitFor({ state: 'attached', timeout: 15000 });
+      } catch (e) {
+        // This component exposes no settings form: move on.
+        continue;
+      }
+      const options = await selects
+        .first()
+        .locator('option')
+        .evaluateAll((els) => els.map((el) => el.value));
+      const current = await selects.first().inputValue();
+      const next = options.find(
+        (value) => value !== current && value !== '_none',
+      );
+      if (!next) {
+        continue;
+      }
+      await selects.first().selectOption(next);
+      // Let the editor issue its layout PATCH before moving on.
+      await this.page.waitForTimeout(4000);
+    }
+  },
+);

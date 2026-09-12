@@ -30,3 +30,12 @@ services:
     arguments:
       - '@canvas_override.inner_constraint_validator'
       - '@entity_type.manager'
+
+  # Makes a node act as its own Canvas host entity, so component inputs that
+  # carry entity-field prop sources (seeded from the ContentTemplate) can be
+  # saved instead of failing with "A host entity is required".
+  # @see https://www.drupal.org/project/canvas_override/issues/3621557
+  Drupal\canvas_override\EventSubscriber\CanvasOverridePreviewEntitySubscriber:
+    autowire: true
+    tags:
+      - { name: event_subscriber }
