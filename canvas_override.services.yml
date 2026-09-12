@@ -39,3 +39,9 @@ services:
     autowire: true
     tags:
       - { name: event_subscriber }
+
+  # Offers Canvas's "link to field" affordance on per-content layouts, which
+  # Canvas itself only builds for content templates.
+  # @see https://www.drupal.org/project/canvas_override/issues/3621557
+  Drupal\canvas_override\Hook\CanvasOverridePropLinkHooks:
+    autowire: true
