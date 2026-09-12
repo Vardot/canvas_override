@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\canvas_override\Hook;
 
 use Drupal\canvas_override\CanvasOverrideServiceProvider;
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -45,6 +47,8 @@ class CanvasOverrideHooks {
     #[Autowire(service: 'entity_display.repository')]
     private readonly mixed $entityDisplayRepository,
     private readonly RequestStack $requestStack,
+    #[Autowire(service: 'csrf_token')]
+    private readonly CsrfTokenGenerator $csrfToken,
   ) {}
 
   /**
@@ -647,28 +651,30 @@ class CanvasOverrideHooks {
         unset($data['tabs'][0]['canvas_override.node.canvas.reset']);
       }
       elseif (isset($data['tabs'][0]['canvas_override.node.canvas.reset']['#link'])) {
-        // Generate WITHOUT bubbleable metadata, which is what makes
-        // RouteProcessorCsrf emit a real token instead of a placeholder.
+        // Put a REAL CSRF token in the hx-post URL.
         //
-        // Given metadata it sets `token` to Crypt::hashBase64($path) -- a hash
-        // of the PATH, not a token -- and registers the lazy builder that
-        // replaces it in #attached['placeholders']. This hook cannot carry that
-        // attachment: $cacheability is a RefinableCacheableDependencyInterface,
-        // so it holds contexts, tags and max-age only, and
-        // addCacheableDependency() drops attachments. The placeholder therefore
-        // reaches the browser unreplaced and the POST is rejected with
-        // "'csrf_token' URL query argument is invalid". Being a hash of the
-        // path it is byte-identical for every user on every site, which makes
-        // the failure look like a stale token rather than a missing one.
+        // Url::toString() cannot produce one here. The url_generator service is
+        // MetadataBubblingUrlGenerator, which always generates WITH bubbleable
+        // metadata and bubbles it into the active render context, whatever the
+        // caller asks for. RouteProcessorCsrf therefore takes its placeholder
+        // branch and sets `token` to Crypt::hashBase64($path) -- a hash of the
+        // PATH, not a token -- registering the lazy builder that replaces it in
+        // #attached['placeholders'].
         //
-        // Attaching the lazy builder to the local task element instead was
-        // tried and does not work; the placeholder is still served verbatim.
+        // hook_menu_local_tasks_alter() runs with no render context, so that
+        // bubbling goes nowhere: the placeholder reaches the browser verbatim
+        // and the POST is rejected with "'csrf_token' URL query argument is
+        // invalid". Being a hash of the path it is byte-identical for every
+        // user on every site, which makes the failure look like a stale token
+        // rather than a missing one. $cacheability cannot carry the attachment
+        // either -- it is a RefinableCacheableDependencyInterface, so contexts,
+        // tags and max-age only.
         //
-        // So take the branch core provides for exactly this case. Without
-        // metadata RouteProcessorCsrf calls CsrfTokenGenerator::get(), seeded
-        // per session, and core adds the 'session' cache context itself when it
-        // has somewhere to put it. It does not here, so add it explicitly.
+        // So swap the placeholder the generator produced for the token core
+        // would have rendered into it, and add the 'session' cache context that
+        // a real token requires.
         // @see \Drupal\Core\Access\RouteProcessorCsrf::processOutbound()
+        // @see \Drupal\Core\Render\MetadataBubblingUrlGenerator::generateFromRoute()
         //
         // The route may be missing from the router table when newer module
         // code runs against a stale router (a deploy before the cache
@@ -678,7 +684,13 @@ class CanvasOverrideHooks {
         // that renders local tasks.
         $post_url = NULL;
         try {
-          $post_url = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()])->toString();
+          $reset_url = Url::fromRoute('canvas_override.node.canvas.reset.do', ['node' => $node->id()]);
+          $reset_path = $reset_url->getInternalPath();
+          $post_url = str_replace(
+            Crypt::hashBase64($reset_path),
+            $this->csrfToken->get($reset_path),
+            $reset_url->toString(),
+          );
         }
         catch (RouteNotFoundException) {
           // Leave $post_url NULL: the tab falls back to the confirm form.
