@@ -18,5 +18,10 @@
     "require": {
         "drupal/core": "^11",
         "drupal/canvas": "~1"
+    },
+    "autoload": {
+        "files": [
+            "canvas_override.class_override.php"
+        ]
     }
 }

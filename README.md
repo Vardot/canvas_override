@@ -18,6 +18,47 @@ composer require drupal/canvas_override
 drush en canvas_override
 ```
 
+### Canvas without the #3567225 patch
+
+Canvas ships `Drupal\canvas\Storage\ComponentTreeLoader` as a `final` class, and
+several Canvas services type-hint that concrete class, so per-content layouts
+normally require the
+[#3567225](https://www.drupal.org/project/canvas_override/issues/3567225) patch
+that un-finalises it.
+
+When that patch is **not** applied, Canvas Override ships its own copy of that
+class (`canvas-compat/ComponentTreeLoader.php` — Canvas's file with `final`
+removed and the constructor properties made `protected`) and loads it under
+Canvas's own class name through a prepended autoloader registered in
+`canvas_override.class_override.php`. Everything else then behaves exactly as it
+does on a patched site.
+
+This only happens when the installed Canvas actually declares the class as
+`final`. On a patched Canvas — or any Canvas release that no longer marks it
+`final` — the autoloader stands aside and Canvas's real class is used, so a
+patched site never runs the copy.
+
+Consequences worth knowing:
+
+- The copy must be re-synced with Canvas's `src/Storage/ComponentTreeLoader.php`
+  on every Canvas release (re-apply the same two changes).
+- The module must be installed **with Composer**, because the autoloader is
+  registered through this package's `autoload.files` entry. Dropping the module
+  into `web/modules/contrib/` by hand skips it, and the module then behaves as it
+  does on any unpatched Canvas (per-content editing stays off).
+- If Canvas's class is already in memory before Composer's autoloader runs — for
+  example under `opcache.preload` — the replacement stands aside and per-content
+  editing stays off. It does not fail hard.
+
+Verified on Drupal CMS 2.1 (Drupal 11.4.6) with an unpatched Canvas 1.10.1,
+including with an optimized autoloader (`composer dump-autoload -o`). Note that
+`--classmap-authoritative` is not usable with Drupal at all — core's database
+driver classes are not in the Composer classmap — so it is not a supported
+configuration for any Drupal site.
+
+The durable fix remains upstream: land #3567225, ideally alongside a
+`ComponentTreeLoaderInterface`.
+
 ## Configuration
 
 1. Go to **Structure > Content types** and edit a content type.
