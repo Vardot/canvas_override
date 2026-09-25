@@ -189,7 +189,7 @@ varbase-e2e-test-drupal-core:
     # every admin page, which is site status rather than anything this module
     # does. Uninstall it so the "no error messages" assertions test the
     # module under test.
-    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT pm:uninstall update -y || true
+    - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT pm:uninstall update -y
     - $CI_PROJECT_DIR/vendor/bin/drush --root=$CI_PROJECT_DIR/$_WEB_ROOT cache:rebuild
     - !reference [.fragments, node_playwright]
   script:
@@ -285,7 +285,7 @@ varbase-e2e-test-drupal-cms:
     # enabled INLINE in its own config. On regressed code this apply aborts with
     # "Missing bundle entity" and fails the job here, before the browser runs.
     - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web recipe $CI_PROJECT_DIR/tests/fixtures/canvas_override_inline_import_test_base
-    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web pm:uninstall update -y || true
+    - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web pm:uninstall update -y
     - $_CMS_BUILD_DIR/vendor/bin/drush --root=$_CMS_BUILD_DIR/web cache:rebuild
     # = Node.js 20 + Playwright Chromium (from CI_PROJECT_DIR - features live there) =
     - cd $CI_PROJECT_DIR
