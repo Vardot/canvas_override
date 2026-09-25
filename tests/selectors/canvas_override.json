@@ -46,7 +46,7 @@
     "permission per bundle reset canvas layout row": "tr:has-text(': Reset Canvas layout')",
     "permissions table": "table#permissions, form#user-admin-permissions table",
     "drupal status messages": ".messages--status, .messages[role='contentinfo'], [data-drupal-messages] .message-item, .message-list .message-item, .message-item",
-    "drupal error messages": ".messages--error, .messages[role='alert']",
+    "drupal error messages": ".messages--error",
     "drupal warning messages": ".messages--warning",
     "drupal page heading": "h1",
     "drupal page title": "h1.page-title, .region-page-title h1",
