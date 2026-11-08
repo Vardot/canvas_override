@@ -13,6 +13,8 @@
     "node tags field": "#edit-field-tags-0-target-id",
     "node path alias field": "#edit-path-0-alias",
     "node path pathauto checkbox": "#edit-path-0-pathauto",
+    "node moderation state select": "#edit-moderation-state-0-state",
+    "node published checkbox": "#edit-status-value",
     "canvas override fieldset": "details#edit-canvas-override",
     "canvas override fieldset summary": "details#edit-canvas-override > summary",
     "canvas override vertical tab": ".vertical-tabs__menu-item a[href$='#edit-canvas-override'], a[href='#edit-canvas-override']",

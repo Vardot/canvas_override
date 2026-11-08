@@ -4,8 +4,8 @@
   "license": "GPL-2.0-or-later",
   "private": true,
   "engines": {
-    "yarn": ">= 4.9.3",
-    "node": ">= 20.0"
+    "yarn": ">= 4.18.1",
+    "node": ">= 24.0"
   },
   "keywords": [
     "Drupal",
@@ -22,12 +22,12 @@
     "lint:js": "node ./node_modules/eslint/bin/eslint.js .",
     "lint:yaml": "node ./node_modules/eslint/bin/eslint.js --ext .yml .",
     "spellcheck": "cspell lint .",
-    "test": "cucumber-js --config cucumber.js",
-    "test:drupal": "cucumber-js --config cucumber.js",
-    "test:drupalcms": "cucumber-js --config cucumber.drupalcms.js",
-    "test:chromium": "BROWSER=chromium cucumber-js --config cucumber.js",
-    "test:firefox": "BROWSER=firefox cucumber-js --config cucumber.js",
-    "test:webkit": "BROWSER=webkit cucumber-js --config cucumber.js",
+    "test": "node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:drupal": "node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:drupalcms": "node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.drupalcms.js",
+    "test:chromium": "BROWSER=chromium node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:firefox": "BROWSER=firefox node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:webkit": "BROWSER=webkit node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
     "generate-reports": "generate-reports"
   },
   "devDependencies": {
@@ -40,7 +40,7 @@
     "eslint-plugin-jquery": "^1.5.1",
     "eslint-plugin-prettier": "^5.4.0",
     "eslint-plugin-yml": "^1.18.0",
-    "glob": "11.0.0",
+    "glob": "^11.0.0",
     "jsdom": "^26.1.0",
     "loadjs": "^4.3.0",
     "minimist": "^1.2.8",
@@ -50,7 +50,7 @@
     "tabbable": "^6.2.0",
     "terser": "^5.39.0",
     "terser-webpack-plugin": "^5.3.14",
-    "underscore": "~1.13.7",
+    "underscore": "^1.13.7",
     "webpack": "^5.99.8",
     "webpack-cli": "^6.0.1"
   },
@@ -65,7 +65,7 @@
     "last 1 Samsung version",
     "Firefox ESR"
   ],
-  "packageManager": "yarn@4.9.3",
+  "packageManager": "yarn@4.18.1",
   "_resolutions_note": "varbase-e2e floats @cucumber/cucumber '*' which resolves to v13 (needs Node 22); the resolution below pins the transitive cucumber to the 12.x line so the suite runs on Node 20.",
   "resolutions": {
     "@cucumber/cucumber": "12.9.0"

@@ -25,7 +25,7 @@ variables:
 
 cspell:
   stage: validate
-  image: node:20
+  image: node:24
   before_script:
     - npm install -g cspell
   script:
@@ -34,7 +34,7 @@ cspell:
 
 eslint:
   stage: validate
-  image: node:20
+  image: node:24
   before_script:
     - corepack enable
     - yarn install
@@ -50,7 +50,7 @@ eslint:
 # (which would look for the default report path and exit non-zero).
 varbase-e2e-dry-run:
   stage: test
-  image: node:20
+  image: node:24
   before_script:
     - corepack enable
     - cp cucumber.js .cucumber.js.bak

@@ -7,7 +7,7 @@
 | Stage | Job | What it does |
 |-------|-----|--------------|
 | test | `phpunit` (matrix) | DrupalCI kernel + unit suites, group `canvas_override` |
-| validate | `cspell`, `eslint` | Spell-check and JS / YAML lint on Node 20 (`allow_failure`) |
+| validate | `cspell`, `eslint` | Spell-check and JS / YAML lint on Node 24 (`allow_failure`) |
 | test | `varbase-e2e-test-drupal-core` | Drupal Standard profile + Canvas, runs `cucumber.js` |
 | test | `varbase-e2e-test-drupal-cms` | Drupal CMS distribution + Canvas, runs `cucumber.drupalcms.js` |
 | .post | `pages` | Builds the MkDocs site for GitLab Pages (default branch only) |
@@ -58,4 +58,4 @@ gitlab-ci-local --file .gitlab-ci-local.yml pages
 ```
 
 `gitlab-ci-local` needs Docker; each job runs in the same image its real
-counterpart uses (`node:20`, `python:3.12-slim`).
+counterpart uses (`node:24`, `python:3.12-slim`).

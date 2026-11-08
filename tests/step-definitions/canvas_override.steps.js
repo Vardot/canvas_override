@@ -233,6 +233,16 @@ Given(
           }
           // URL alias lives in a collapsed details element but is in the DOM.
           set(sel.alias, data.alias);
+          // Publish it. Drupal CMS puts every content type, this one included,
+          // in its Basic editorial workflow, where a new item starts as a
+          // Draft that only the Webmaster can see; Drupal core has no
+          // moderation and a plain Published checkbox instead.
+          set(sel.moderation, 'published');
+          const published = document.querySelector(sel.published);
+          if (published && !published.checked) {
+            published.checked = true;
+            published.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         },
         {
           data: {
@@ -247,6 +257,8 @@ Given(
             body: resolveName(this, 'node body field'),
             pathauto: resolveName(this, 'node path pathauto checkbox'),
             alias: resolveName(this, 'node path alias field'),
+            moderation: resolveName(this, 'node moderation state select'),
+            published: resolveName(this, 'node published checkbox'),
           },
         },
       );
